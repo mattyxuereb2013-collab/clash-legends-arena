@@ -559,14 +559,22 @@ function build3(){
  for(const b of bushes){
   const group=new T.Group();g.fixed.add(group);
   const colors=[0x17452a,...bushColors,0x6ac66b];
-  const materials=colors.map(color=>new T.MeshStandardMaterial({color,flatShading:true,roughness:.95,transparent:true,opacity:1,depthWrite:true}));
+  const materials=colors.map(color=>new T.MeshStandardMaterial({color,flatShading:true,roughness:1,transparent:true,opacity:1,depthWrite:true}));
   group.userData={cover:b,materials,inside:false};g.bushViews.push(group);
-  mesh3(group,g.bx,materials[0],b.x+b.w/2,9,b.y+b.h/2,b.w,17,b.h);
-  for(let z=b.y+12;z<b.y+b.h;z+=29)for(let xx=b.x+12;xx<b.x+b.w;xx+=28){
-   const hash=(Math.sin(xx*12.9898+z*78.233)*43758.5453)%1;
-   const x=xx+hash*5,zz=z+Math.cos(xx+z)*4,idx=Math.abs(Math.floor(hash*17))%5;
-   mesh3(group,g.round,materials[1+idx],x,21,zz,19,16,20);
-   if((xx+z)%3<1.5)mesh3(group,g.round,materials[6],x-5,31,zz-7,8,5,9);
+  // Irregular overlapping mounds instead of a square Minecraft-like shrub grid.
+  mesh3(group,g.bx,materials[0],b.x+b.w/2,5,b.y+b.h/2,b.w,9,b.h);
+  const density=Math.max(12,Math.round(b.w*b.h/680));
+  let hashSeed=((b.x*1237+b.y*8191)>>>0);
+  const random=()=>{hashSeed=(Math.imul(hashSeed,1664525)+1013904223)>>>0;return hashSeed/4294967296};
+  for(let n=0;n<density;n++){
+   const xx=b.x+7+random()*(b.w-14),zz=b.y+7+random()*(b.h-14);
+   const col=1+Math.floor(random()*5),size=13+random()*16;
+   const leaf=mesh3(group,g.sphere,materials[col],xx,12+random()*12,zz,size,13+random()*11,size*(.65+random()*.55));
+   leaf.rotation.y=random()*Math.PI;
+   if(n%4===0){
+    const top=mesh3(group,g.sphere,materials[6],xx+2,leaf.position.y+size*.33,zz-2,size*.38,3.2,size*.3);
+    top.castShadow=false;
+   }
   }
  }
  // Sparse terrain markers and crystal clusters improve depth cues without hiding gameplay.
