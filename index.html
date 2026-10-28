@@ -198,7 +198,7 @@ function refresh(){
  if($('lobbyCoins'))$('lobbyCoins').textContent='🪙 '+coins();
  const i=selected(),lv=Math.max(1,num(key(i,'Level'))),t=num(key(i,'Trophies'));
  if($('fighterName'))$('fighterName').textContent=names[i];
- if($('fighterSubtitle'))$('fighterSubtitle').textContent=icons[i]+' POWER '+lv+' · 🏆 '+t+' TROPHIES';
+ if($('fighterSubtitle'))$('fighterSubtitle').textContent=['⚡ PRECISION BLASTER','🔥 FIRESTORM FIGHTER','🌿 NATURE GUARDIAN','💜 SHADOW STRIKER','❄️ FREEZING ARTILLERY','🎯 TRIPLE-SHOT ACE','🌟 STAR-BURST SPECIALIST','🪨 STONE STRIKER'][i];
  if($('fighterArt')){$('fighterArt').style.setProperty('--fighter',colors[i]);$('fighterArt').style.setProperty('--fighter-dark',darks[i])}
  if(window.clashRefreshRoad)window.clashRefreshRoad();
 }
