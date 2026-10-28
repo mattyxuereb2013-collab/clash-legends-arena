@@ -184,6 +184,58 @@ const key=(i,type)=>'clash'+names[i].charAt(0)+names[i].slice(1).toLowerCase()+t
 const num=k=>Math.max(0,Number(localStorage.getItem(k)||0)||0);
 const selected=()=>Math.min(7,Math.max(0,Number(localStorage.getItem('clashLegendsFighter')||0)));
 const coins=()=>num('clashLegendsCoins');
+const unlockThresholds=[0,25,150,300,500,800,1200,2000];
+const unlocked=i=>i===0||localStorage.getItem('clashOwned'+names[i])==='yes';
+function ensureUnlockedSelection(){
+ const i=selected();if(!unlocked(i))localStorage.setItem('clashLegendsFighter','0')
+}
+ensureUnlockedSelection();
+const points=i=>num(key(i,'Points'));
+const drops=()=>num('clashDrops');
+const boxes=()=>num('clashBoxes');
+function grantReward(type,amount,i=selected()){
+ if(type==='coins')localStorage.setItem('clashLegendsCoins',coins()+amount);
+ else if(type==='points')localStorage.setItem(key(i,'Points'),points(i)+amount);
+ else if(type==='drop')localStorage.setItem('clashDrops',drops()+amount);
+ else if(type==='box')localStorage.setItem('clashBoxes',boxes()+amount);
+ else if(type==='fighter'&&i>0)localStorage.setItem('clashOwned'+names[i],'yes');
+}
+function rewardText(reward){
+ return reward.type==='fighter'?'🦸 UNLOCK '+icons[reward.i]+' '+names[reward.i]:
+ reward.type==='coins'?'🪙 '+reward.amount+' COINS':
+ reward.type==='points'?'⚡ '+reward.amount+' POWER POINTS':
+ reward.type==='drop'?'✨ '+reward.amount+' CLASH DROP'+(reward.amount>1?'S':''):
+ '📦 '+reward.amount+' ARENA BOX'+(reward.amount>1?'ES':'')
+}
+function openRandomReward(kind,returnTo){
+ const total=kind==='drop'?drops():boxes();
+ if(total<=0){notify('NO '+(kind==='drop'?'CLASH DROPS':'ARENA BOXES')+' TO OPEN',returnTo);return}
+ const keyName=kind==='drop'?'clashDrops':'clashBoxes';
+ localStorage.setItem(keyName,total-1);
+ const roll=Math.random(),tier=roll<.54?'RARE':roll<.84?'SUPER RARE':roll<.96?'EPIC':'LEGENDARY';
+ const mult={RARE:1,'SUPER RARE':2,EPIC:4,LEGENDARY:8}[tier]*(kind==='box'?2:1);
+ const item=Math.random()<.55?'coins':'points';
+ const amount=(item==='coins'?35:18)*mult;
+ // Reward a random already-owned fighter with upgrade points.
+ const owned=names.map((_,i)=>i).filter(unlocked);
+ const fighter=owned[Math.floor(Math.random()*owned.length)]||0;
+ grantReward(item,amount,fighter);
+ refresh();
+ screen((kind==='box'?'📦 ARENA BOX':'✨ CLASH DROP')+' · '+tier,[
+  {label:'🎉 '+(item==='coins'?rewardText({type:item,amount}):icons[fighter]+' '+names[fighter]+' · '+amount+' POWER POINTS'),disabled:true},
+  {label:'OPEN ANOTHER '+(kind==='box'?'BOX':'DROP'),disabled:(kind==='box'?boxes():drops())===0,action:()=>openRandomReward(kind,returnTo)},
+  {label:'✅ COLLECT',action:returnTo}
+ ])
+}
+function rewardsMenu(){
+ screen('🎁 REWARDS & COLLECTION',[
+  {label:'✨ CLASH DROPS '+drops()+' · OPEN',disabled:drops()<=0,action:()=>openRandomReward('drop',rewardsMenu)},
+  {label:'📦 ARENA BOXES '+boxes()+' · OPEN',disabled:boxes()<=0,action:()=>openRandomReward('box',rewardsMenu)},
+  {label:'🏆 TROPHY ROAD REWARDS',action:()=>document.querySelector('#trackButton').click()},
+  {label:'⬆ FIGHTER POWER POINTS · '+points(selected()),disabled:true}
+ ])
+}
+
 // Online rooms are ephemeral: never leave a stale duel selected after a reload.
 if(localStorage.getItem('clashGameMode')==='duel'&&!window.clashLiveDuel?.active)localStorage.setItem('clashGameMode','showdown');
 const close=()=>popup.style.display='none';
@@ -194,7 +246,7 @@ function screen(title,items){heading.textContent=title;options.replaceChildren()
 });popup.style.display='flex'}
 function notify(msg,action){screen(msg,[{label:'OKAY',action:action||close}])}
 function refresh(){
- if($('championPower'))$('championPower').textContent=icons[selected()]+' POWER '+Math.max(1,num(key(selected(),'Level')));
+ ensureUnlockedSelection();if($('championPower'))$('championPower').textContent=icons[selected()]+' POWER '+Math.max(1,num(key(selected(),'Level')))+(localStorage.getItem(key(selected(),'Hyper'))==='yes'?' 🌈':'');
  if($('championTrophies'))$('championTrophies').textContent='🏆 '+num(key(selected(),'Trophies'))+' TROPHIES';
  if($('lobbyTrophies'))$('lobbyTrophies').textContent='🏆 '+num('clashLegendsTrophies');
  if($('lobbyCoins'))$('lobbyCoins').textContent='🪙 '+coins();
@@ -204,24 +256,38 @@ function refresh(){
  if($('fighterArt')){$('fighterArt').style.setProperty('--fighter',colors[i]);$('fighterArt').style.setProperty('--fighter-dark',darks[i])}
  if(window.clashRefreshRoad)window.clashRefreshRoad();
 }
-function choose(i){localStorage.setItem('clashLegendsFighter',String(i));refresh();close()}
+function choose(i){if(!unlocked(i)){notify('🔒 '+names[i]+' UNLOCKS ON TROPHY ROAD AT '+unlockThresholds[i]+' TROPHIES',fighters);return}localStorage.setItem('clashLegendsFighter',String(i));refresh();close()}
 $('fighterPrev').onclick=()=>choose((selected()+names.length-1)%names.length);
 $('fighterNext').onclick=()=>choose((selected()+1)%names.length);
 $('championUpgrade').onclick=()=>upgrade();
 document.addEventListener('keydown',e=>{if($('menu').style.display==='none'||popup.style.display==='flex'||!$('welcomeGate').hidden||['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;if(e.key==='ArrowLeft'){$('fighterPrev').click();e.preventDefault()}if(e.key==='ArrowRight'){$('fighterNext').click();e.preventDefault()}});
 
-function fighters(){screen('🦸 CHOOSE YOUR LEGEND',names.map((n,i)=>({label:icons[i]+' '+n+' · LV '+Math.max(1,num(key(i,'Level')))+' · 🏆 '+num(key(i,'Trophies')),selected:selected()===i,action:()=>choose(i)})).concat([{label:'⚙️ UPGRADE SELECTED',action:upgrade}]))}
+function fighters(){screen('🦸 BRAWLER COLLECTION · '+names.filter((_,i)=>unlocked(i)).length+'/8',names.map((n,i)=>({
+ label:unlocked(i)?icons[i]+' '+n+' · POWER '+Math.max(1,num(key(i,'Level')))+' · ⚡ '+points(i)+' PP':'🔒 '+n+' · TROPHY ROAD '+unlockThresholds[i]+' 🏆',
+ selected:selected()===i,disabled:!unlocked(i),action:()=>choose(i)
+})).concat([{label:'⬆ UPGRADE SELECTED',action:upgrade},{label:'🎁 OPEN DROPS & BOXES',action:rewardsMenu}]))}
 function upgrade(){
- const i=selected(),lv=Math.min(10,Math.max(1,num(key(i,'Level')))),cost=60*lv;
+ const i=selected(),lv=Math.min(10,Math.max(1,num(key(i,'Level')))),cost=60*lv,pointCost=lv<=2?0:12*lv;
+ const hasHyper=localStorage.getItem(key(i,'Hyper'))==='yes',hyperPrice=1000,hyperPoints=100;
  screen(icons[i]+' '+names[i]+' · POWER '+lv,[
-  {label:'❤️ HEALTH '+(100+(lv-1)*20),disabled:true},
-  {label:'🎯 DAMAGE BONUS +'+((lv-1)*16)+'%',disabled:true},
-  {label:'🪙 YOUR COINS '+coins(),disabled:true},
-  {label:lv===10?'⭐ MAX POWER':'⬆ UPGRADE · '+cost+' COINS',disabled:lv===10,selected:lv<10,action:()=>{
-   if(coins()<cost){notify('🪙 NEED '+(cost-coins())+' MORE COINS',upgrade);return}
-   localStorage.setItem('clashLegendsCoins',coins()-cost);localStorage.setItem(key(i,'Level'),lv+1);refresh();upgrade()
+  {label:'❤️ HEALTH '+(100+(lv-1)*20)+' · 🎯 DAMAGE +'+((lv-1)*16)+'%',disabled:true},
+  {label:'🪙 COINS '+coins()+' · ⚡ POWER POINTS '+points(i),disabled:true},
+  {label:lv===10?'⭐ MAX POWER':'⬆ POWER '+(lv+1)+' · '+cost+' COINS'+(pointCost?' + '+pointCost+' PP':''),disabled:lv===10,action:()=>{
+   if(coins()<cost||points(i)<pointCost){notify('NEED '+Math.max(0,cost-coins())+' COINS AND '+Math.max(0,pointCost-points(i))+' POWER POINTS',upgrade);return}
+   localStorage.setItem('clashLegendsCoins',coins()-cost);
+   localStorage.setItem(key(i,'Points'),points(i)-pointCost);
+   localStorage.setItem(key(i,'Level'),lv+1);refresh();upgrade()
   }},
-  {label:'🦸 CHANGE LEGEND',action:fighters}
+  {label:hasHyper?'🌈 HYPERCHARGE EQUIPPED · PRESS H IN BATTLE':lv<10?'🔒 HYPERCHARGE UNLOCKS AT POWER 10':'🌈 HYPERCHARGE · '+hyperPrice+' COINS + '+hyperPoints+' PP',
+   disabled:hasHyper||lv<10,action:()=>{
+    if(localStorage.getItem(key(i,'Hyper'))==='yes')return upgrade();
+    if(coins()<hyperPrice||points(i)<hyperPoints){notify('HYPERCHARGE NEEDS '+hyperPrice+' COINS & '+hyperPoints+' POWER POINTS',upgrade);return}
+    localStorage.setItem('clashLegendsCoins',coins()-hyperPrice);
+    localStorage.setItem(key(i,'Points'),points(i)-hyperPoints);
+    localStorage.setItem(key(i,'Hyper'),'yes');refresh();upgrade()
+   }},
+  {label:'🎁 GET POWER POINTS FROM CLASH DROPS',action:rewardsMenu},
+  {label:'🦸 CHANGE BRAWLER',action:fighters}
  ])
 }
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
@@ -251,22 +317,27 @@ function shop(){const claimed=localStorage.getItem('clashDailyGift')===today();
   }},
   {label:'⬆ UPGRADE '+names[selected()],action:upgrade},
   {label:'🎨 COSMETIC SKINS',action:cosmeticShop},
-  {label:'🦸 BRAWLER COLLECTION',action:fighters}
+  {label:'🦸 BRAWLER COLLECTION',action:fighters},
+  {label:'✨ CLASH DROPS & ARENA BOXES',action:rewardsMenu},
+  {label:'📦 BUY ARENA BOX · 200 COINS',action:()=>{if(coins()<200){notify('NEED 200 COINS',shop);return}grantReward('coins',-200);grantReward('box',1);refresh();rewardsMenu()}},
+  {label:'✨ BUY CLASH DROP · 90 COINS',action:()=>{if(coins()<90){notify('NEED 90 COINS',shop);return}grantReward('coins',-90);grantReward('drop',1);refresh();rewardsMenu()}}
  ])}
 const questDefs=[
  {name:'PLAY 3 MATCHES',key:'Matches',target:3,reward:110},
  {name:'WIN A SHOWDOWN',key:'Wins',target:1,reward:150},
- {name:'DEFEAT 8 RIVALS',key:'Kills',target:8,reward:120}
+ {name:'DEFEAT 8 RIVALS',key:'Kills',target:8,reward:120},
+ {name:'WIN 3 MATCHES · CLASH DROP',key:'Wins',target:3,reward:0,drop:1},
+ {name:'DEFEAT 20 RIVALS · ARENA BOX',key:'Kills',target:20,reward:0,box:1}
 ];
 function quests(){
  const day=today();
  screen('📜 DAILY QUESTS · '+day,questDefs.map((q,i)=>{
   const value=localStorage.getItem('clashDailyStatsDate')===day?num('clashDaily'+q.key):0;
   const done=localStorage.getItem('clashQuestClaim_'+i)===day;
-  return {label:(done?'✓ ':'')+q.name+' · '+Math.min(value,q.target)+'/'+q.target+(done?' · CLAIMED':value>=q.target?' · CLAIM +'+q.reward+' 🪙':' · +'+q.reward+' 🪙'),disabled:done||value<q.target,selected:value>=q.target&&!done,action:()=>{
+  return {label:(done?'✓ ':'')+q.name+' · '+Math.min(value,q.target)+'/'+q.target+(done?' · CLAIMED':value>=q.target?' · CLAIM +'+(q.drop?'✨ CLASH DROP':q.box?'📦 ARENA BOX':q.reward+' 🪙'):' · +'+q.reward+' 🪙'),disabled:done||value<q.target,selected:value>=q.target&&!done,action:()=>{
    if(localStorage.getItem('clashQuestClaim_'+i)===day)return;
    if(localStorage.getItem('clashDailyStatsDate')!==day||num('clashDaily'+q.key)<q.target)return;
-   localStorage.setItem('clashQuestClaim_'+i,day);localStorage.setItem('clashLegendsCoins',coins()+q.reward);refresh();quests()
+   localStorage.setItem('clashQuestClaim_'+i,day);if(q.drop)grantReward('drop',q.drop);else if(q.box)grantReward('box',q.box);else grantReward('coins',q.reward);refresh();quests()
   }}
  }))}
 function modeName(){return localStorage.getItem('clashGameMode')||'showdown'}
