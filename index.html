@@ -68,12 +68,12 @@ for(const b of bots){
 if(b.hp<=0)continue;
 const candidates=[hero,...bots.filter(other=>other!==b&&other.hp>0)];
 let target=candidates.reduce((best,v)=>dist(b,v)<dist(b,best)?v:best,candidates[0]);
-const d=dist(b,target),a=Math.atan2(target.y-b.y,target.x-b.x);
-if(d>190)move(b,Math.cos(a)*b.speed*dt,Math.sin(a)*b.speed*dt);
+const d=dist(b,target),a=Math.atan2(target.y-b.y,target.x-b.x);if(!b.brain){b.brain=rand(.4,1.6);b.dodge=0}b.brain-=dt;if(b.brain<=0){b.side=Math.random()<.5?-1:1;b.brain=rand(.6,1.7)}const danger=shots.find(p=>p.owner!==b&&p.life>0&&dist(p,b)<125&&((p.x-b.x)*p.vx+(p.y-b.y)*p.vy)<0);if(danger)b.dodge=.28;b.dodge=Math.max(0,b.dodge-dt);
+if(b.dodge>0){move(b,-Math.sin(a)*b.side*b.speed*1.8*dt,Math.cos(a)*b.side*b.speed*1.8*dt)}else if(d>190)move(b,Math.cos(a)*b.speed*dt,Math.sin(a)*b.speed*dt);
 else if(d<105)move(b,-Math.cos(a)*b.speed*.55*dt,-Math.sin(a)*b.speed*.55*dt);
-else move(b,-Math.sin(a)*b.side*b.speed*.6*dt,Math.cos(a)*b.side*b.speed*.6*dt);
+else move(b,-Math.sin(a)*b.side*b.speed*.6*dt,Math.cos(a)*b.side*b.speed*.6*dt);if(b.hp<b.max*.4&&d<165)move(b,-Math.cos(a)*b.speed*.65*dt,-Math.sin(a)*b.speed*.65*dt);
 b.shoot-=dt;
-if(b.shoot<=0&&d<490){shoot(b,a+rand(-.16,.16),true);b.shoot=rand(1.1,2.1)}
+if(b.shoot<=0&&d<490){shoot(b,a+rand(-.12,.12),true);b.shoot=rand(.95,1.9)}
 if(b.x<stormMargin||b.y<stormMargin||b.x>worldW-stormMargin||b.y>worldH-stormMargin)b.hp-=18*dt;
 }
 for(const shot of shots){
@@ -115,8 +115,8 @@ function draw(){
 x.clearRect(0,0,w,h);x.fillStyle='#10142c';x.fillRect(0,0,w,h);
 x.save();if(screenShake>0)x.translate((Math.random()-.5)*screenShake*devicePixelRatio,(Math.random()-.5)*screenShake*devicePixelRatio);if(hero){let vw=w/scale,vh=h/scale;cameraX=vw>=worldW?(worldW-vw)/2:clamp(hero.x-vw/2,0,worldW-vw);cameraY=vh>=worldH?(worldH-vh)/2:clamp(hero.y-vh/2,0,worldH-vh)}x.scale(scale,scale);x.translate(-cameraX,-cameraY);
 x.fillStyle='#d7ad68';x.fillRect(0,0,worldW,worldH);
-for(let yy=0;yy<worldH;yy+=48)for(let xx=0;xx<worldW;xx+=48){let n=Math.sin(xx*1.73+yy*2.81);x.fillStyle=n>0?'#e4b977':'#cfa15f';x.fillRect(xx+1,yy+1,46,46)}
-for(const d of decor){x.fillStyle=d.t>.75?'#a37c48':d.t>.4?'#efcb91':'#b68d55';x.beginPath();x.ellipse(d.x,d.y,4+d.t*5,2+d.t*3,d.t*4,0,7);x.fill()}
+for(let yy=0;yy<worldH;yy+=64)for(let xx=0;xx<worldW;xx+=64){let n=Math.sin(xx*.081+yy*.053)*Math.cos(yy*.14-xx*.037);x.fillStyle=n>.28?'#e6bd7d':n<-.3?'#cfa065':'#d9ae70';x.fillRect(xx,yy,64,64);x.fillStyle='#fff2c418';x.beginPath();x.ellipse(xx+22,yy+18,22,9,-.3,0,7);x.fill();x.strokeStyle='#996c3c26';x.lineWidth=2;x.beginPath();x.arc(xx+44,yy+48,15,.4,2.6);x.stroke()}
+for(const d of decor){x.fillStyle=d.t>.75?'#a37c48':d.t>.4?'#efcb91':'#b68d55';x.beginPath();x.ellipse(d.x,d.y,3+d.t*5,2+d.t*3,d.t*4,0,7);x.fill();if(d.t>.83){x.strokeStyle='#fff0c075';x.lineWidth=1.5;x.beginPath();x.moveTo(d.x-8,d.y+7);x.lineTo(d.x+6,d.y+3);x.stroke()}}
 for(const bush of bushes){roundRect(bush.x+3,bush.y+6,bush.w,bush.h,14,'#245b37');for(let by=bush.y+14;by<bush.y+bush.h;by+=22)for(let bx=bush.x+13;bx<bush.x+bush.w;bx+=23){let offset=Math.sin(bx*3+by)*5;x.fillStyle=(bx+by)%3>1?'#3caa58':'#318a49';x.beginPath();x.arc(bx+offset,by,15,0,7);x.fill();x.fillStyle='#6fce67';x.beginPath();x.arc(bx-3+offset,by-4,5,0,7);x.fill()}}
 for(const q of walls){roundRect(q.x+5,q.y+9,q.w,q.h,8,'#79502f');roundRect(q.x,q.y,q.w,q.h,8,'#c68c4f');roundRect(q.x+3,q.y+3,q.w-6,11,4,'#f1c080');x.strokeStyle='#9c653b';x.lineWidth=2;for(let yy=q.y+24;yy<q.y+q.h;yy+=24){x.beginPath();x.moveTo(q.x+5,yy);x.lineTo(q.x+q.w-5,yy);x.stroke()}for(let xx=q.x+35;xx<q.x+q.w;xx+=45){x.beginPath();x.moveTo(xx,q.y+13);x.lineTo(xx,q.y+q.h-5);x.stroke()}}
 let sm=Math.min(335,Math.max(0,stormTime-10)*2.7);
