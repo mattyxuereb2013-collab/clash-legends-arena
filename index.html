@@ -63,6 +63,21 @@ body:not(.phone-mode) #touch{display:none!important}
 @media(max-height:520px){#panel{gap:5px;padding:5px 14px}.lobby-main{min-height:170px;gap:8px}.lobby-rail{gap:5px}.lobby-rail button{padding:6px 7px}.fighter-art{width:clamp(110px,18vw,190px);height:clamp(125px,24vh,220px)}.fighter-name{font-size:22px}.fighter-sub{font-size:11px}.lobby-bottom{gap:6px}.lobby-footer{display:none}#trophyTrack{padding:4px 8px}.profile{padding:3px 8px}#start{padding:7px 24px}.mode-card{padding:5px 9px}}
 @media(max-width:520px) and (orientation:portrait){.lobby-main{grid-template-columns:70px minmax(120px,1fr) 70px}.lobby-rail button{font-size:9px;padding:8px 2px}.fighter-art{width:145px;height:170px}#panel{padding:8px}.lobby-top{gap:6px}.lobby-bottom{gap:5px}.mode-card{min-width:160px}#start{min-width:145px;padding:9px;font-size:19px}.option-grid{grid-template-columns:1fr 1fr}}
 
+
+.result-screen{flex:1;display:grid;place-items:center;position:relative;z-index:2;min-height:92vh}
+.result-card{width:min(680px,96%);border:4px solid #cab5ff;border-radius:23px;background:linear-gradient(170deg,#3c37a2,#24245c);padding:clamp(15px,3vw,32px);box-shadow:0 13px 0 #15113c,0 24px 38px #0006;text-align:center}
+.result-kicker{font-size:clamp(12px,2vw,20px);letter-spacing:4px;color:#a9ddff;font-weight:1000}
+.result-place{font-size:clamp(54px,11vw,110px);line-height:1.14;font-weight:1000;text-shadow:0 7px #111651;color:#ffdd51;margin-top:2px}
+.result-card h1{font-size:clamp(23px,3.7vw,40px);margin:3px 0 5px}
+.result-fighter{font-size:clamp(12px,2vw,17px);font-weight:900;color:#ddd7ff;margin-bottom:13px}
+.result-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px auto}
+.result-stats>div{background:#181e65;border:2px solid #7381bf;border-radius:11px;padding:9px 5px;display:grid;gap:5px}
+.result-stats span{font-size:clamp(9px,1.3vw,13px);color:#bac6f7;font-weight:900}
+.result-stats b{font-size:clamp(15px,3vw,26px)}
+.result-rewards{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;color:#ffe68b;font-size:clamp(15px,2.6vw,23px);font-weight:1000;margin:14px}
+.result-rewards>div{background:#202665;border:2px solid #b1acff;border-radius:11px;padding:8px 15px}
+.result-card #again{padding:12px 26px;font-size:clamp(16px,2.5vw,26px)}
+@media(max-height:550px){.result-screen{min-height:0}.result-card{padding:12px}.result-place{font-size:52px}.result-card h1{font-size:24px}.result-stats{margin:6px auto}.result-stats>div{padding:5px}.result-rewards{margin:8px}}
 </style></head><body><canvas id="game"></canvas><div id="threeView"></div><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><div id="matchIntro" aria-live="polite"><h2 id="introTitle">10 LEGENDS ENTER</h2><div id="roster"></div><p id="introSub">SOLO SHOWDOWN</p></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
 <div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff" id="profileNickname">ROOKIE LEGEND</div><button type="button" id="profileSignout">SWITCH PROFILE</button></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency">💎 0</span></div></div>
 <div class="lobby-main"><div class="lobby-rail"><button id="fightersBtn">🦸<div>FIGHTERS</div></button><button id="shopBtn">🛒<div>SHOP</div></button><button id="questsBtn">📜<div>QUESTS</div></button></div>
@@ -262,7 +277,7 @@ const today=new Date(),day=today.getFullYear()+'-'+String(today.getMonth()+1).pa
 if(localStorage.getItem('clashDailyStatsDate')!==day){localStorage.setItem('clashDailyStatsDate',day);for(const k of ['Matches','Wins','Kills'])localStorage.setItem('clashDaily'+k,'0')}
 if(localStorage.getItem('clashGameMode')!=='training'){localStorage.setItem('clashDailyMatches',Number(localStorage.getItem('clashDailyMatches')||0)+1);if(victory)localStorage.setItem('clashDailyWins',Number(localStorage.getItem('clashDailyWins')||0)+1);localStorage.setItem('clashDailyKills',Number(localStorage.getItem('clashDailyKills')||0)+showdownKills)}
 menu.style.display='flex';
-document.querySelector('#panel').innerHTML='<h1>'+(victory?'🏆 SHOWDOWN VICTORY!':'💀 ELIMINATED')+'</h1><p>PLACEMENT #'+placement+' / 10 · 🎯 '+showdownKills+' KOs · 💚 '+hero.cubes+' cubes</p><p>🏆 '+(sessionTrophies>=0?'+':'')+sessionTrophies+' trophies · 🪙 +'+sessionCoins+' coins</p><button id="again">BACK TO LOBBY</button>';
+document.querySelector('#panel').innerHTML='<div class="result-screen"><div class="result-card"><div class="result-kicker">'+(victory?'VICTORY ROYALE':'MATCH COMPLETE')+'</div><div class="result-place">'+(victory?'🏆':'⭐')+' #'+placement+'</div><h1>'+(victory?'YOU ARE THE CHAMPION!':'GOOD FIGHT, LEGEND!')+'</h1><div class="result-fighter">'+['⚡ BOLT','🔥 EMBER','🌿 MOSS','💜 VIOLET','❄️ FROST','🎯 RICOCHET','🌟 NOVA','🪨 TERRA'][selectedFighter]+' · POWER '+fighterLevel()+'</div><div class="result-stats"><div><span>PLACEMENT</span><b>#'+placement+' / 10</b></div><div><span>ELIMINATIONS</span><b>💥 '+showdownKills+'</b></div><div><span>POWER CUBES</span><b>💚 '+hero.cubes+'</b></div></div><div class="result-rewards"><div>🏆 '+(sessionTrophies>0?'+':'')+sessionTrophies+' TROPHIES</div><div>🪙 +'+sessionCoins+' COINS</div></div><button id="again">RETURN TO LOBBY ▶</button></div></div>';
 document.querySelector('#again').onclick=()=>location.reload();
 }
 hpEl.textContent='❤️ '+Math.max(0,Math.ceil(hero.hp))+'/'+hero.max+'   ⚡ '+Math.floor(hero.super)+'%   💚 '+hero.cubes+'   🔫 '+('●'.repeat(ammo)+'○'.repeat(3-ammo));
@@ -555,6 +570,7 @@ fire.addEventListener('pointermove',fireMove);
 function fireEnd(e){if(e.pointerId!==fireId)return;e.preventDefault();if(fireShots===0)fireOne();fireId=null;touchFire=false;fireDragged=false;fire.style.removeProperty('--aim-x');fire.style.removeProperty('--aim-y')}
 fire.addEventListener('pointerup',fireEnd);fire.addEventListener('pointercancel',e=>{if(e.pointerId!==fireId)return;fireId=null;touchFire=false;fire.style.removeProperty('--aim-x');fire.style.removeProperty('--aim-y')});
 document.querySelector('#super').addEventListener('pointerdown',e=>{e.preventDefault();superAttack()});
+if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).has('e2e'))window.__clashTest={forceWin:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';bots=[];hero.hp=Math.max(1,hero.hp)},forceLose:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';hero.hp=0},snapshot:()=>({playing,introStage,ammo,selectedFighter,alive:bots.length,heroHP:hero&&hero.hp,graphics:!!gfx3,mode:localStorage.getItem('clashGameMode')||'showdown'})};
 })();
 </script>
 <script>
