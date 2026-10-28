@@ -56,7 +56,12 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   await page.evaluate(()=>window.__clashTest.skipIntro());
   await page.evaluate(()=>window.__clashTest.triggerSuper());
   await page.waitForFunction(()=>/3[0-9]%/.test(document.querySelector('#hyperButton')?.textContent||''),null,{timeout:4000});
-  console.log('PASS Hypercharge purchase, points cost and battle charging');
+  await page.evaluate(()=>{window.__clashTest.triggerSuper();window.__clashTest.triggerSuper()});
+  await page.waitForFunction(()=>window.__clashTest.snapshot().hyperCharge>=100,null,{timeout:4000});
+  await page.keyboard.press('KeyH');
+  await page.waitForFunction(()=>window.__clashTest.snapshot().hyper>0,null,{timeout:4000});
+  assert.equal(await page.evaluate(()=>window.__clashTest.snapshot().hyperCharge),0,'Hypercharge must consume its meter');
+  console.log('PASS Hypercharge purchase, points cost, charging and combat activation');
   assert.deepEqual(errors,[],'uncaught browser exceptions');
  }finally{await browser.close()}
 })().catch(e=>{console.error('FAIL progression test:',e);process.exitCode=1});
