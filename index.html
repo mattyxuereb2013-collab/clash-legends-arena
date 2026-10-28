@@ -516,7 +516,24 @@ function build3(){
    if((xx+z)%3<1.5)mesh3(group,g.round,materials[6],x-5,31,zz-7,8,5,9);
   }
  }
- // Reusable small rocks and cacti create landmarks beyond plain walls.
+ // Sparse terrain markers and crystal clusters improve depth cues without hiding gameplay.
+ const pebble= g.geo('terrainMarker',()=>new T.CylinderGeometry(1,1,.3,18));
+ const soilColors=[0xc58c67,0xdcaa7c,0x9e654c,0xd5a16f];
+ for(let i=0;i<75;i++){
+  const x=115+((i*397+131)%1970),z=115+((i*263+71)%1265);
+  if(walls.some(w=>x>w.x-35&&x<w.x+w.w+35&&z>w.y-35&&z<w.y+w.h+35))continue;
+  if(bushes.some(b=>x>b.x-15&&x<b.x+b.w+15&&z>b.y-15&&z<b.y+b.h+15))continue;
+  const m=mesh3(g.fixed,pebble,g.mat(soilColors[i%4]),x,.3,z,9+i%4*4,1,4+i%3*4);
+  m.rotation.y=i*2.39;m.castShadow=false;
+ }
+ for(let i=0;i<12;i++){
+  const x=130+((i*571)%1940),z=100+((i*313)%1270);
+  if(walls.some(w=>x>w.x-80&&x<w.x+w.w+80&&z>w.y-80&&z<w.y+w.h+80))continue;
+  const gem=mesh3(g.fixed,g.round,g.mat(i%2?0x77cfc5:0xdb98dd,0x1b0b23),x,15,z,9,18,9);
+  gem.rotation.z=.13*(i%3-1);
+  mesh3(g.fixed,g.round,g.mat(0x76526a),x,3,z,16,5,15);
+ }
+  // Reusable small rocks and cacti create landmarks beyond plain walls.
  const rockColors=[0xd9aa77,0xa87859,0xe6bd89,0x997454];
  for(let i=0;i<105;i++){
   const v=decor[i*2];if(!v)continue;
