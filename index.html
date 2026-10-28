@@ -62,7 +62,7 @@ if(!playing)return;
 stormTime+=dt;matchClock+=dt;reloadTimer+=dt;if(ammo<3&&reloadTimer>=1.65){ammo++;reloadTimer=0}healDelay=Math.max(0,healDelay-dt);if(healDelay===0&&hero.hp>0&&hero.hp<hero.max)hero.hp=Math.min(hero.max,hero.hp+hero.max*.055*dt);const stormMargin=Math.min(335,Math.max(0,stormTime-10)*2.7);
 hitFlash=Math.max(0,hitFlash-dt*3);screenShake=Math.max(0,screenShake-dt*25);hero.inv=Math.max(0,hero.inv-dt);fireClock-=dt;comboClock-=dt;if(comboClock<=0)combo=0;
 let dx=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0)+touchMove.x,dy=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0)+touchMove.y;
-let mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag}move(hero,dx*hero.speed*dt,dy*hero.speed*dt);
+let mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag}hero.vx=dx;hero.vy=dy;move(hero,dx*hero.speed*dt,dy*hero.speed*dt);
 if((mouse.down||touchFire)&&fireClock<=0&&ammo>0){shoot(hero,aim());ammo--;healDelay=3.5;fireClock=.3}
 for(const b of bots){
 if(b.hp<=0)continue;
@@ -124,19 +124,19 @@ if(sm>0){x.fillStyle='#a53fb89c';x.fillRect(0,0,worldW,sm);x.fillRect(0,worldH-s
 x.strokeStyle='#8b653e';x.lineWidth=14;x.strokeRect(7,7,worldW-14,worldH-14);
 for(let crate of crates){if(crate.hp<=0)continue;roundRect(crate.x-19,crate.y-19,38,38,7,'#754d2c');roundRect(crate.x-15,crate.y-15,30,30,5,'#c18b49');x.fillStyle='#ffe9a2';x.fillRect(crate.x-3,crate.y-15,6,30);x.fillRect(crate.x-15,crate.y-3,30,6)}for(let d of drops){x.fillStyle=d.kind==='cube'?'#8bff5a':d.kind==='heal'?'#6cf7a1':'#ffd447';x.beginPath();x.arc(d.x,d.y,d.r+Math.sin(performance.now()/160)*2,0,Math.PI*2);x.fill();x.fillStyle='#273f47';x.font='bold 18px system-ui';x.textAlign='center';x.fillText(d.kind==='cube'?'◆':d.kind==='heal'?'+':'$',d.x,d.y+6)}for(let shot of shots){for(let i=0;i<shot.trail.length;i++){const p=shot.trail[i];x.globalAlpha=(i+1)/(shot.trail.length+1)*.5;x.fillStyle=shot.color;x.beginPath();x.arc(p.x,p.y,shot.r*(i+1)/(shot.trail.length+1),0,7);x.fill()}x.globalAlpha=1;x.shadowColor=shot.color;x.shadowBlur=16;x.fillStyle=shot.color;x.beginPath();x.arc(shot.x,shot.y,shot.r,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#fff9db';x.beginPath();x.arc(shot.x-2,shot.y-2,shot.r*.36,0,7);x.fill()}
 function drawFighter(o,style,angle=0,player=false){
-const k=style%4,tm=performance.now()/1000,step=Math.sin(tm*10+o.x*.03)*2.5;
+const k=style%4,tm=performance.now()/1000,step=Math.sin(tm*10+o.x*.03)*2.5;const walking=Math.abs(o.vx||0)+Math.abs(o.vy||0)>.5;const bob=walking?Math.sin(tm*13+o.x*.03)*2.2:Math.sin(tm*3+o.x*.02)*.8;
 const outfits=['#1766b8','#b53730','#347e55','#6132a4'],trim=['#44ceff','#ffb54f','#a5e46c','#da9aff'],skin=['#f0b88c','#f3b18b','#bad69e','#e4a9c7'],dark=['#163b74','#732c38','#28553f','#38205e'];
 const outline='#252440';
 function blob(cx,cy,rx,ry,color,stroke=outline,lw=2.8){x.beginPath();x.ellipse(cx,cy,rx,ry,0,0,7);x.fillStyle=color;x.fill();if(lw){x.strokeStyle=stroke;x.lineWidth=lw;x.stroke()}}
 function path(points,color,lw=2.8){x.beginPath();x.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)x.lineTo(points[i][0],points[i][1]);x.closePath();x.fillStyle=color;x.fill();x.lineWidth=lw;x.strokeStyle=outline;x.stroke()}
 function rect(px,py,w,h,r,col){x.beginPath();x.roundRect(px,py,w,h,r);x.fillStyle=col;x.fill();x.lineWidth=2.7;x.strokeStyle=outline;x.stroke()}
 x.save();x.translate(o.x,o.y);
-blob(1,21,24,8,'#241d3477','transparent',0);
-x.translate(0,Math.sin(tm*5+o.x)*1.4);
-rect(-17,10+step*.4,13,14,5,dark[k]);rect(4,10-step*.4,13,14,5,dark[k]);
-rect(-19,-3,38,23,10,outfits[k]);rect(-14,1,28,13,6,trim[k]);
+blob(1,24,26,9,'#241d3477','transparent',0);if(player){x.save();x.strokeStyle='#fff3a2';x.lineWidth=2.5;x.globalAlpha=.6;x.beginPath();x.ellipse(0,20,29,12,0,0,7);x.stroke();x.restore()}
+x.translate(0,bob);x.scale(player?1.15:1,player?1.15:1);
+rect(-17,10+(walking?step:0)*.7,13,14,5,dark[k]);rect(4,10-(walking?step:0)*.7,13,14,5,dark[k]);
+blob(0,2,23,17,'#1d1a3a');rect(-19,-3,38,23,10,outfits[k]);rect(-14,1,28,13,6,trim[k]);
 rect(-19,-4,11,17,5,outfits[k]);rect(8,-4,11,17,5,outfits[k]);
-blob(0,-17,19,19,skin[k]);blob(-18,-14,5,7,skin[k]);blob(18,-14,5,7,skin[k]);
+blob(1,-17,20,20,'#9e604f');blob(0,-19,19,19,skin[k]);blob(-7,-25,6,4,'#ffe3ba','transparent',0);blob(-18,-14,5,7,skin[k]);blob(18,-14,5,7,skin[k]);
 if(k===0){
 path([[-19,-25],[-21,-40],[-8,-35],[1,-47],[12,-37],[20,-35],[21,-23],[11,-30],[-8,-27]],'#154d9c');
 path([[-12,-39],[0,-47],[4,-34]],'#5be4ff');
