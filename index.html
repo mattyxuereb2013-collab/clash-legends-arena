@@ -638,7 +638,7 @@ function createFighter3(style,me){
  if(style===5){mesh3(body,g.sphere,g.mat(0xffe88b),0,102,0,28,5,28)}
  if(style===6){mesh3(body,g.round,g.mat(0xffbadc),0,111,0,13,13,13)}
  if(style===7){mesh3(body,g.bx,g.mat(0xe6c29b),0,106,0,31,9,31)}
- const gun=new T.Group();body.add(gun);gun.position.set(16,46,15);
+ const gun=new T.Group();body.add(gun);gun.position.set(16,46,15);gun.rotation.y=-Math.PI/2;
  const barrel=mesh3(gun,g.bx,g.mat(dark),23,-4,0,38,17,18);
  mesh3(gun,g.bx,g.mat(trim),40,-3,0,12,12,15);
  mesh3(gun,g.round,g.mat(main),11,1,0,13,14,15);
@@ -699,9 +699,9 @@ function updateFighter3(o,style,me){
  m.ring.material.color.setHex(powered?0xffee6e:me?0xffd76a:o.friendly?0x6cffee:0xff5778);
  m.ring.scale.setScalar(powered?1.1+Math.sin(t*7)*.08:1);
  const facing=me?aim():o.remote?(o.facing||0):Math.atan2(hero.y-o.y,hero.x-o.x);
- m.body.rotation.y=-facing;
- m.gun.rotation.y=0;
- m.gun.position.x=16-Math.max(0,1-(performance.now()-(o.lastShot||0))/220)*10;
+ m.body.rotation.y=Math.PI/2-facing;
+ m.gun.rotation.y=-Math.PI/2;
+ m.gun.position.z=15-Math.max(0,1-(performance.now()-(o.lastShot||0))/220)*10;
  m.hpFill.scale.x=Math.max(.001,60*Math.max(0,o.hp)/Math.max(1,o.max));
  m.hpFill.position.x=-30+m.hpFill.scale.x/2;
  return m;
