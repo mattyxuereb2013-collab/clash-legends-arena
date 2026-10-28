@@ -21,6 +21,7 @@ jobs:
           node tests/smoke.cjs
           node tests/gameplay-matrix.cjs
           node tests/online-duel.cjs
+          node tests/quick-match.cjs
       - name: Keep screenshots for debugging
         if: always()
         uses: actions/upload-artifact@v4
