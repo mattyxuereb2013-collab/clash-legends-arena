@@ -37,6 +37,9 @@ const assert=require('node:assert/strict');
   await host.evaluate(()=>window.__clashTest.forceWin());
   await host.waitForSelector('.result-card',{timeout:12000});
   assert.equal(await host.evaluate(()=>Number(localStorage.getItem('clashBoltTrophies')||0)),0,'online peer duel must not award trophies');
+  assert.match(await host.locator('.result-card').innerText(),/ONLINE 1V1|FRIENDLY DUEL/);
+  assert.match(await host.locator('.result-card').innerText(),/NO RANKED REWARDS/);
+  assert.equal(await host.evaluate(()=>Number(localStorage.getItem('clashLegendsWins')||0)),0,'unranked duel should not affect offline career wins');
   console.log('PASS: unranked online duel gives no trophies');
  }finally{for(const c of contexts)await c.close();await browser.close()}
 })().catch(e=>{console.error('FAIL real-time online-duel integration',e);process.exitCode=1});
