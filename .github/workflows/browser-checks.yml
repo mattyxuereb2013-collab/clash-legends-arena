@@ -1,0 +1,29 @@
+name: Clash Legends browser checks
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install Playwright
+        run: npm install --no-save playwright@1.58.2
+      - name: Start static site
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 >/tmp/clash-server.log 2>&1 &
+          sleep 2
+      - name: Run Chrome browser smoke tests
+        run: node tests/smoke.cjs
+      - name: Save actual browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clash-browser-shots
+          path: arena-*.png
+          if-no-files-found: ignore
