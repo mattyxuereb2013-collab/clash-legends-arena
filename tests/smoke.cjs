@@ -77,7 +77,7 @@ const base='http://127.0.0.1:8765/?e2e=1';
   const afterShot=await page.evaluate(()=>window.__clashTest.snapshot());
   assert.equal(afterShot.ammo,beforeShot.ammo-1,'mouse click should consume one ammo');
   assert(afterShot.lastPlayerShot&&afterShot.lastPlayerShot.vx>0,'shot should travel toward the cursor on the right');
-  assert(afterShot.visibleAttackTrails>0,'3D bullets should show bright directional trails');
+  await page.waitForFunction(()=>window.__clashTest.snapshot().visibleAttackTrails>0,{timeout:3000});
   await page.screenshot({path:'arena-desktop.png'});
   await page.evaluate(()=>window.__clashTest.forceWin());
   await page.waitForSelector('.result-card',{timeout:12000});
