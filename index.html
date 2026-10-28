@@ -336,11 +336,11 @@ function superAttack(){
  if(!playing||paused||introStage||hero.super<100)return;
  hero.super=0;healDelay=3;const k=selectedFighter;
  if(k===2){hero.hp=Math.min(hero.max,hero.hp+hero.max*.45);hero.inv=2;burst(hero.x,hero.y,'#65ff96',35)}
- else if(k===3){for(const b of bots)if(dist(hero,b)<315){b.hp-=95;burst(b.x,b.y,'#e3a1ff',15)}burst(hero.x,hero.y,'#c576ff',35)}
- else if(k===4){for(const b of bots)if(dist(hero,b)<400)b.frozen=3.5;for(let i=0;i<14;i++)shoot(hero,i*Math.PI/7,false,1.25);burst(hero.x,hero.y,'#b6f5ff',42)}
+ else if(k===3){for(const b of bots)if(!b.friendly&&dist(hero,b)<315){b.hp-=95;burst(b.x,b.y,'#e3a1ff',15)}burst(hero.x,hero.y,'#c576ff',35)}
+ else if(k===4){for(const b of bots)if(!b.friendly&&dist(hero,b)<400)b.frozen=3.5;for(let i=0;i<14;i++)shoot(hero,i*Math.PI/7,false,1.25);burst(hero.x,hero.y,'#b6f5ff',42)}
  else if(k===5){const a=aim();for(let i=-4;i<=4;i++)shoot(hero,a+i*.18,false,1.8);burst(hero.x,hero.y,'#ffe47e',25)}
  else if(k===6){for(let i=0;i<12;i++)shoot(hero,i*Math.PI/6,false,1.8);hero.inv=1;burst(hero.x,hero.y,'#ffc8e8',40)}
- else if(k===7){for(const b of bots)if(dist(hero,b)<270){b.hp-=115;const a=Math.atan2(b.y-hero.y,b.x-hero.x);move(b,Math.cos(a)*100,Math.sin(a)*100)}hero.inv=1.3;burst(hero.x,hero.y,'#e4bd86',36)}
+ else if(k===7){for(const b of bots)if(!b.friendly&&dist(hero,b)<270){b.hp-=115;const a=Math.atan2(b.y-hero.y,b.x-hero.x);move(b,Math.cos(a)*100,Math.sin(a)*100)}hero.inv=1.3;burst(hero.x,hero.y,'#e4bd86',36)}
  else{for(let i=0;i<(k===1?18:12);i++)shoot(hero,i*Math.PI/(k===1?9:6),false,k===1?1.95:1.55);burst(hero.x,hero.y,k===1?'#ff9b37':'#ffe65a',34)}
 }
 function update(dt){
@@ -712,7 +712,7 @@ function setPause(value){if(!playing)return;paused=!!value;pauseOverlay.hidden=!
 pauseBtn.addEventListener('click',()=>setPause(!paused));document.querySelector('#resumeBtn').onclick=()=>setPause(false);
 document.querySelector('#surrenderBtn').onclick=()=>{paused=false;pauseOverlay.hidden=true;introStage=0;introPanel.style.display='none';hero.hp=0};
 addEventListener('keydown',e=>{if(e.key==='Escape'&&playing){e.preventDefault();setPause(!paused)}});
-if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).has('e2e'))window.__clashTest={skipIntro:()=>{introStage=0;introPanel.style.display='none'},forceWin:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';bots=[];hero.hp=Math.max(1,hero.hp)},forceLose:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';hero.hp=0},snapshot:()=>({playing,introStage,ammo,selectedFighter,alive:bots.length,friendly:bots.filter(b=>b.friendly).length,heroHP:hero&&hero.hp,graphics:!!gfx3,mode:localStorage.getItem('clashGameMode')||'showdown'})};
+if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).has('e2e'))window.__clashTest={skipIntro:()=>{introStage=0;introPanel.style.display='none'},forceWin:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';bots=[];hero.hp=Math.max(1,hero.hp)},forceLose:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';hero.hp=0},triggerSuper:()=>{if(hero&&playing){introStage=0;introPanel.style.display='none';hero.super=100;superAttack()}},snapshot:()=>({playing,introStage,ammo,selectedFighter,alive:bots.length,friendly:bots.filter(b=>b.friendly).length,friendHP:bots.find(b=>b.friendly)?.hp??null,heroHP:hero&&hero.hp,graphics:!!gfx3,mode:localStorage.getItem('clashGameMode')||'showdown'})};
 })();
 </script>
 <script>
