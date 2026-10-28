@@ -30,6 +30,8 @@ const base='http://127.0.0.1:8765/?e2e=1';
   await page.waitForTimeout(700);
   const loaded3d=await page.evaluate(()=>Boolean(window.THREE)&&document.querySelector('#threeView canvas')!==null);
   assert(loaded3d,'Three.js WebGL canvas did not initialize');
+  await page.evaluate(()=>window.__clashTest.skipIntro());
+  await page.waitForTimeout(500);
   await page.screenshot({path:'arena-desktop.png'});
   await page.evaluate(()=>window.__clashTest.forceWin());
   await page.waitForSelector('.result-card',{timeout:12000});
