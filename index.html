@@ -1087,10 +1087,16 @@ async function friendsList(handle){
  const friends=rows.filter(r=>r.status==='accepted');
  const incoming=rows.filter(r=>r.status==='pending'&&r.recipient===user.id);
  const outgoing=rows.filter(r=>r.status==='pending'&&r.requester===user.id);
+ const invitations=await api.from('clash_duel_invites').select('id,sender,room_code,status,expires_at').eq('recipient',user.id).eq('status','pending').gt('expires_at',new Date().toISOString()).limit(12);
+ if(invitations.error)console.warn('Duel invitations could not load',invitations.error.message);
  view('👥 ONLINE FRIENDS · '+handle,[
   {label:'➕ SEND FRIEND REQUEST',action:sendRequest},
   {label:'🔄 REFRESH FRIENDS',action:()=>friendsList(handle)},
-  ...friends.map(r=>({label:'✅ FRIEND · '+other(r),disabled:true})),
+  ...friends.map(r=>({label:'⚔️ INVITE '+other(r)+' TO DUEL',action:()=>sendFriendDuelInvite(r,other(r))})),
+  ...(invitations.data||[]).flatMap(v=>[
+   {label:'🎮 JOIN DUEL FROM '+(names.get(v.sender)||'FRIEND'),action:()=>respondToDuelInvite(v,'accepted')},
+   {label:'✕ DECLINE DUEL INVITE',action:()=>respondToDuelInvite(v,'declined')}
+  ]),
   ...incoming.flatMap(r=>[
    {label:'✅ ACCEPT '+other(r),action:()=>decide(r.id,'accepted')},
    {label:'✕ DECLINE '+other(r),action:()=>decide(r.id,'declined')}
@@ -1099,6 +1105,22 @@ async function friendsList(handle){
   ...(!rows.length?[{label:'NO FRIENDS YET · SHARE YOUR CODE',disabled:true}]:[]),
   {label:'🔒 SIGN OUT OF ONLINE FRIENDS',action:async()=>{await api.auth.signOut();user=null;loginMenu()}}
  ])
+}
+
+async function sendFriendDuelInvite(friend,label){
+ if(!user)return online();
+ const recipient=friend.requester===user.id?friend.recipient:friend.requester;
+ const code=randomRoomCode();
+ const created=await api.from('clash_duel_invites').insert({sender:user.id,recipient,room_code:code});
+ if(created.error){notice('INVITE COULD NOT BE SENT: '+created.error.message);return}
+ await connectDuel(code,'host');
+}
+async function respondToDuelInvite(invite,status){
+ if(!user)return online();
+ const res=await api.from('clash_duel_invites').update({status}).eq('id',invite.id);
+ if(res.error){notice('INVITE RESPONSE FAILED: '+res.error.message);return}
+ if(status==='accepted')await connectDuel(invite.room_code,'guest');
+ else online()
 }
 async function sendRequest(){
  const handle=prompt('Enter your friend’s online code (3–18 characters):');
