@@ -1,0 +1,30 @@
+name: Clash Legends browser checks
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install test browser driver
+        run: npm install --no-save playwright@1.56.1
+      - name: Start the game server and test desktop and mobile
+        run: |
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/clash-http.log 2>&1 &
+          sleep 2
+          node tests/smoke.cjs
+      - name: Keep screenshots for debugging
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: clash-legends-browser-screenshots
+          path: |
+            arena-desktop.png
+            arena-lobby.png
+            arena-mobile.png
