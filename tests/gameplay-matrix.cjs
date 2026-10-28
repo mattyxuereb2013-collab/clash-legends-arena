@@ -12,6 +12,7 @@ const names=['Bolt','Ember','Moss','Violet','Frost','Ricochet','Nova','Terra'];
   await page.locator('#welcomeGo').click();
   for(let i=0;i<8;i++){
    await page.evaluate(index=>{
+    if(index>0)localStorage.setItem('clashOwned'+['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'][index],'yes');
     localStorage.setItem('clashLegendsFighter',String(index));
     localStorage.setItem('clashGameMode','showdown');
    },i);
