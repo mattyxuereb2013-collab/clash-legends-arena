@@ -15,7 +15,10 @@
 .lobby-main{flex:1;min-height:310px;display:grid;grid-template-columns:minmax(110px,1fr) minmax(200px,2.1fr) minmax(110px,1fr);align-items:center;gap:12px}
 .lobby-rail{display:flex;flex-direction:column;gap:10px}.lobby-rail button{background:#252c7b;color:white;box-shadow:0 5px #101444;font-size:clamp(12px,1.8vw,18px);padding:12px 7px;border:2px solid #8294eb}
 .fighter-stage{display:flex;align-items:center;justify-content:center;flex-direction:column;min-width:0}
-.fighter-art{position:relative;width:clamp(150px,24vw,270px);height:clamp(175px,28vw,300px);filter:drop-shadow(0 14px 0 #21175c)}
+.fighter-art{animation:lobbyFloat 3s ease-in-out infinite;position:relative;width:clamp(150px,24vw,270px);height:clamp(175px,28vw,300px);filter:drop-shadow(0 14px 0 #21175c)}
+@keyframes lobbyFloat{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-12px) rotate(2deg)}}
+.fighter-art canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 12px 6px #140d56aa)}
+.fighter-art:after{content:'';position:absolute;bottom:-8px;left:12%;width:76%;height:16px;background:#120e46aa;border-radius:50%;filter:blur(8px);z-index:-1}
 .fighter-head{position:absolute;top:16%;left:22%;width:56%;height:50%;background:var(--fighter);border:8px solid #24205a;border-radius:42% 42% 38% 38%;transform:rotate(-6deg)}
 .fighter-eye{position:absolute;top:35%;width:12%;height:13%;border-radius:50%;background:white;border:3px solid #24205a}.fighter-eye.left{left:36%}.fighter-eye.right{right:32%}
 .fighter-body{position:absolute;top:58%;left:29%;width:44%;height:34%;background:var(--fighter-dark);border:8px solid #24205a;border-radius:25%}
@@ -34,7 +37,7 @@
 </style></head><body><canvas id="game"></canvas><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
 <div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff">ROOKIE LEGEND</div></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency">💎 0</span></div></div>
 <div class="lobby-main"><div class="lobby-rail"><button id="fightersBtn">🦸<div>FIGHTERS</div></button><button id="shopBtn">🛒<div>SHOP</div></button><button id="questsBtn">📜<div>QUESTS</div></button></div>
-<div class="fighter-stage"><div class="fighter-art" id="fighterArt" style="--fighter:#38b6ff;--fighter-dark:#236bc2"><div class="fighter-arm left"></div><div class="fighter-arm right"></div><div class="fighter-body"></div><div class="fighter-head"></div><div class="fighter-eye left"></div><div class="fighter-eye right"></div></div><div class="fighter-name" id="fighterName">BOLT</div><div class="fighter-sub" id="fighterSubtitle">⚡ STARTER FIGHTER · POWER 1</div></div>
+<div class="fighter-stage"><div class="fighter-art" id="fighterArt" style="--fighter:#38b6ff;--fighter-dark:#236bc2"><canvas id="lobbyFighterCanvas" width="420" height="460" aria-label="Animated fighter preview"></canvas></div><div class="fighter-name" id="fighterName">BOLT</div><div class="fighter-sub" id="fighterSubtitle">⚡ STARTER FIGHTER · POWER 1</div></div>
 <div class="lobby-rail"><button id="modesBtn">🎮<div>MODES</div></button><button id="rankedBtn">🏆<div>RANKED</div></button><button id="friendsBtn">👥<div>FRIENDS</div></button></div></div>
 <div class="lobby-bottom"><div class="mode-card" id="modeCard" role="button" tabindex="0"><span class="mode-icon" id="modeIcon">🌪️</span><div><div class="mode-title" id="modeTitle">SOLO SHOWDOWN</div><div class="mode-desc" id="modeDesc">10 fighters · Last one standing · Bots</div></div><span>▾</span></div><button id="start">PLAY ▶</button></div>
 <div class="lobby-footer"><span>⚡ CLASH LEGENDS: ARENA · ORIGINAL PROTOTYPE</span><span>💻 WASD + Mouse · 📱 Touch controls</span></div>
@@ -149,6 +152,33 @@ const fire=document.querySelector('#fire');fire.addEventListener('pointerdown',e
 <script>
 (()=>{'use strict';
 const fighters=[{name:'BOLT',color:'#38b6ff',dark:'#236bc2',sub:'⚡ STARTER FIGHTER · POWER 1'},{name:'EMBER',color:'#ff9852',dark:'#cf4839',sub:'🔥 FIRE SPECIALIST · POWER 1'},{name:'MOSS',color:'#8fe36a',dark:'#3d9b56',sub:'🌿 NATURE GUARDIAN · POWER 1'},{name:'VIOLET',color:'#dc88fa',dark:'#7846bd',sub:'💜 SHADOW STRIKER · POWER 1'}];
+const preview=document.querySelector('#lobbyFighterCanvas'),g=preview.getContext('2d');
+function lobbyFighter(t){
+const i=Number(localStorage.getItem('clashLegendsFighter')||0)%4,f=fighters[i],u=t*.001,bob=Math.sin(u*2)*4;
+g.clearRect(0,0,420,460);g.save();g.translate(210,240+bob);
+function ellipse(cx,cy,rx,ry,col){g.fillStyle=col;g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,7);g.fill()}
+function shape(col,stroke='#28204d',lw=9){g.fillStyle=col;g.strokeStyle=stroke;g.lineWidth=lw;g.lineJoin='round';g.fill();g.stroke()}
+function poly(points,col){g.beginPath();g.moveTo(...points[0]);for(let j=1;j<points.length;j++)g.lineTo(...points[j]);g.closePath();shape(col)}
+ellipse(0,176,94,17,'#17104480');
+g.save();g.rotate(Math.sin(u*2)*.05);
+ellipse(-44,145,32,25,'#292449');ellipse(44,145,32,25,'#292449');
+g.beginPath();g.roundRect(-77,19,154,126,36);shape(f.dark);
+g.beginPath();g.roundRect(-62,30,124,91,27);shape(f.color,'#352454',6);
+g.fillStyle='#ffffff44';g.beginPath();g.roundRect(-49,39,98,19,10);g.fill();
+g.save();g.translate(-81,45);g.rotate(-.23+Math.sin(u*2)*.09);g.beginPath();g.roundRect(-40,-22,64,94,29);shape(f.color);ellipse(-11,68,27,23,'#f5bb91');g.restore();
+g.save();g.translate(81,43);g.rotate(.3-Math.sin(u*2)*.1);g.beginPath();g.roundRect(-25,-22,64,94,29);shape(f.color);ellipse(17,67,27,23,'#f5bb91');g.restore();
+g.beginPath();g.roundRect(-78,-117,156,163,61);shape(i===2?'#c8d9a2':'#f1b58f');
+ellipse(-49,-14,19,12,'#e79778');ellipse(50,-14,19,12,'#e79778');
+if(i===0){poly([[-85,-65],[-92,-128],[-49,-150],[-16,-131],[16,-154],[78,-126],[87,-64],[52,-97],[-40,-96]],'#183b83');poly([[-72,-112],[-28,-155],[-2,-123]],'#49d5ff')}
+if(i===1){poly([[-82,-75],[-89,-145],[-48,-125],[-15,-173],[13,-135],[49,-160],[85,-112],[79,-68],[36,-105],[-43,-95]],'#b42f3b');poly([[-30,-142],[-15,-173],[10,-131]],'#ffb34c')}
+if(i===2){g.beginPath();g.ellipse(0,-113,93,53,0,Math.PI,Math.PI*2);shape('#27684c');ellipse(-33,-138,31,15,'#a5ee70');ellipse(25,-150,28,12,'#75c65b')}
+if(i===3){poly([[-91,-53],[-80,-146],[-18,-172],[50,-147],[90,-52],[62,-92],[-53,-89]],'#563099');poly([[-23,-168],[1,-191],[23,-168]],'#e0a2ff')}
+ellipse(-34,-42,21,27,'#fff');ellipse(37,-42,21,27,'#fff');ellipse(-27+Math.sin(u)*2,-38,9,14,'#292449');ellipse(44+Math.sin(u)*2,-38,9,14,'#292449');
+g.strokeStyle='#663c43';g.lineWidth=7;g.lineCap='round';g.beginPath();g.arc(4,-5,18,.16,Math.PI-.15);g.stroke();
+g.save();g.translate(75,58);g.rotate(-.5+Math.sin(u*2)*.1);g.beginPath();g.roundRect(-7,-18,89,49,14);shape(i===2?'#46734c':i===3?'#7936a8':'#3e4c78');g.beginPath();g.roundRect(53,-12,45,36,9);shape('#d4e6f4','#293455',6);ellipse(94,6,11,12,'#243c5b');g.restore();
+g.restore();g.restore();
+requestAnimationFrame(lobbyFighter)}
+requestAnimationFrame(lobbyFighter);
 const modes=[['🌪️','SOLO SHOWDOWN','10 fighters · Last one standing · Bots',true],['🤝','DUO SHOWDOWN','Coming soon',false],['💀','KNOCKOUT','3v3 elimination · Coming soon',false],['🏆','RANKED','Competitive online · Coming soon',false]];
 let selected=Number(localStorage.getItem('clashLegendsFighter')||0);const initial=fighters[selected]||fighters[0];document.querySelector('#fighterName').textContent=initial.name;document.querySelector('#fighterSubtitle').textContent=initial.sub;document.querySelector('#fighterArt').style.setProperty('--fighter',initial.color);document.querySelector('#fighterArt').style.setProperty('--fighter-dark',initial.dark);const popup=document.querySelector('#lobbyPopup'),options=document.querySelector('#popupOptions'),title=document.querySelector('#popupTitle');
 function show(name,entries){title.textContent=name;options.innerHTML='';entries.forEach(entry=>{let b=document.createElement('button');b.textContent=entry.label;b.className=entry.selected?'selected':'';b.onclick=entry.action;options.appendChild(b)});popup.style.display='flex'}
