@@ -12,6 +12,8 @@ const base='http://127.0.0.1:8765/?e2e=1';
   await page.locator('#welcomeName').fill('ArenaTester');
   await page.locator('#deviceLaptop').click();
   await page.locator('#welcomeGo').click();
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator('#fighterArt .champion-webgl').count(),1,'animated 3D lobby preview should initialize');
   await page.locator('#fighterNext').click();
   assert.equal(await page.locator('#fighterName').innerText(),'EMBER','next fighter arrow should change fighter');
   await page.locator('#fighterPrev').click();
