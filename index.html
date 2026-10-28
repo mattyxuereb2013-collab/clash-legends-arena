@@ -605,31 +605,46 @@ if(i===0){poly([[-85,-65],[-92,-128],[-49,-150],[-16,-131],[16,-154],[78,-126],[
 if(i===1){poly([[-82,-75],[-89,-145],[-48,-125],[-15,-173],[13,-135],[49,-160],[85,-112],[79,-68],[36,-105],[-43,-95]],'#b42f3b');poly([[-30,-142],[-15,-173],[10,-131]],'#ffb34c')}
 if(i===2){g.beginPath();g.ellipse(0,-113,93,53,0,Math.PI,Math.PI*2);shape('#27684c');ellipse(-33,-138,31,15,'#a5ee70');ellipse(25,-150,28,12,'#75c65b')}
 if(i===3){poly([[-91,-53],[-80,-146],[-18,-172],[50,-147],[90,-52],[62,-92],[-53,-89]],'#563099');poly([[-23,-168],[1,-191],[23,-168]],'#e0a2ff')}
+if(i===4){poly([[-85,-70],[-76,-148],[-30,-160],[-2,-180],[41,-160],[79,-142],[88,-72],[43,-106],[-41,-96]],'#2985ab');poly([[-60,-132],[-29,-161],[-6,-134],[17,-182],[51,-138]],'#d0f9ff')}
+if(i===5){poly([[-89,-70],[-91,-130],[-61,-141],[-15,-139],[0,-160],[45,-145],[91,-133],[88,-65],[54,-100],[-46,-92]],'#ac7728');ellipse(0,-146,90,20,'#ffdf75')}
+if(i===6){poly([[-85,-69],[-76,-155],[-30,-169],[0,-194],[31,-163],[78,-149],[88,-69],[41,-96],[-40,-96]],'#b13883');ellipse(0,-166,21,22,'#ffcce8')}
+if(i===7){poly([[-88,-76],[-91,-142],[-55,-159],[-17,-155],[24,-163],[80,-142],[91,-71],[48,-96],[-41,-95]],'#765039');g.beginPath();g.roundRect(-90,-158,180,26,8);shape('#d9b588')}
 ellipse(-34,-42,21,27,'#fff');ellipse(37,-42,21,27,'#fff');ellipse(-27+Math.sin(u)*2,-38,9,14,'#292449');ellipse(44+Math.sin(u)*2,-38,9,14,'#292449');
 g.strokeStyle='#663c43';g.lineWidth=7;g.lineCap='round';g.beginPath();g.arc(4,-5,18,.16,Math.PI-.15);g.stroke();
-g.save();g.translate(75,58);g.rotate(-.5+Math.sin(u*2)*.1);g.beginPath();g.roundRect(-7,-18,89,49,14);shape(i===2?'#46734c':i===3?'#7936a8':'#3e4c78');g.beginPath();g.roundRect(53,-12,45,36,9);shape('#d4e6f4','#293455',6);ellipse(94,6,11,12,'#243c5b');g.restore();
+g.save();g.translate(75,58);g.rotate(-.5+Math.sin(u*2)*.1);g.beginPath();g.roundRect(-7,-18,89,49,14);shape(i===2?'#46734c':i===3?'#7936a8':i===4?'#458ab5':i===5?'#aa7430':i===6?'#9f4273':i===7?'#7e5c42':'#3e4c78');g.beginPath();g.roundRect(53,-12,45,36,9);shape('#d4e6f4','#293455',6);ellipse(94,6,11,12,'#243c5b');g.restore();
 g.restore();g.restore();
 requestAnimationFrame(lobbyFighter)}
 requestAnimationFrame(lobbyFighter);
-const modes=[['🌪️','SOLO SHOWDOWN','10 fighters · Last one standing · Bots',true],['🤝','DUO SHOWDOWN','Coming soon',false],['💀','KNOCKOUT','3v3 elimination · Coming soon',false],['🏆','RANKED','Competitive online · Coming soon',false]];
-let selected=0;const initial=fighters[selected]||fighters[0];document.querySelector('#fighterName').textContent=initial.name;document.querySelector('#fighterSubtitle').textContent=initial.sub;document.querySelector('#fighterArt').style.setProperty('--fighter',initial.color);document.querySelector('#fighterArt').style.setProperty('--fighter-dark',initial.dark);const popup=document.querySelector('#lobbyPopup'),options=document.querySelector('#popupOptions'),title=document.querySelector('#popupTitle');
-function show(name,entries){title.textContent=name;options.innerHTML='';entries.forEach(entry=>{let b=document.createElement('button');b.textContent=entry.label;b.className=entry.selected?'selected':'';b.onclick=entry.action;options.appendChild(b)});popup.style.display='flex'}
-function close(){popup.style.display='none'}document.querySelector('#popupClose').onclick=close;popup.addEventListener('click',e=>{if(e.target===popup)close()});
-document.querySelector('#fightersBtn').onclick=()=>show('FIGHTERS',fighters.map((f,i)=>({label:i===0?'✓ BOLT · UNLOCKED':('🔒 '+f.name+' · COMING SOON'),selected:i===0,action:()=>{if(i!==0){title.textContent='LOCKED — COMING SOON';return}close()}})));
-document.querySelector('#fighterName').textContent=fighters[selected]?.name||'BOLT';document.querySelector('#fighterSubtitle').textContent=fighters[selected]?.sub||fighters[0].sub;document.querySelector('#fighterArt').style.setProperty('--fighter',fighters[selected]?.color||fighters[0].color);document.querySelector('#fighterArt').style.setProperty('--fighter-dark',fighters[selected]?.dark||fighters[0].dark);function chooseMode(){show('GAME MODES',modes.map(m=>({label:m[0]+' '+m[1]+(m[3]?'':' 🔒'),selected:m[3],action:()=>{if(!m[3]){title.textContent=m[1]+' — COMING SOON';return}close()}})))}
-document.querySelector('#modesBtn').onclick=chooseMode;document.querySelector('#modeCard').onclick=chooseMode;document.querySelector('#modeCard').onkeydown=e=>{if(e.key==='Enter')chooseMode()};
-function coming(name){show(name,[{label:'This feature is being built. Practice Arena is playable now.',action:close}])}
-function upgradeCost(){return fighterLevel()*60}
-function upgradeBolt(){let lv=fighterLevel(),coins=Number(localStorage.getItem('clashLegendsCoins')||0),cost=upgradeCost();if(lv>=10){title.textContent='BOLT MAX LEVEL';return}if(coins<cost){title.textContent='NEED '+(cost-coins)+' MORE COINS';return}localStorage.setItem('clashLegendsCoins',coins-cost);localStorage.setItem('clashBoltLevel',lv+1);document.querySelector('#lobbyCoins').textContent='🪙 '+(coins-cost);openUpgrade()}
-function openUpgrade(){let lv=fighterLevel();show('⚡ BOLT · LEVEL '+lv,[{label:'❤️ HP: '+(100+(lv-1)*20),action:()=>{}},{label:'🎯 DAMAGE: '+(25+(lv-1)*4),action:()=>{}},{label:lv>=10?'⭐ MAX LEVEL':'⬆ UPGRADE · 🪙 '+upgradeCost(),selected:lv<10,action:upgradeBolt},{label:'CLOSE',action:close}])}
-document.querySelector('#shopBtn').textContent='🛒 SHOP';document.querySelector('#shopBtn').onclick=()=>{const today=new Date().toDateString(),claimed=localStorage.getItem('clashDailyGift')===today;show('🛒 LEGENDS SHOP',[{label:'🪙 COINS: '+Number(localStorage.getItem('clashLegendsCoins')||0),action:()=>{}},{label:'⚡ UPGRADE BOLT · POWER '+fighterLevel(),selected:true,action:openUpgrade},{label:claimed?'✓ DAILY GIFT CLAIMED':'🎁 CLAIM FREE 50 COINS',selected:!claimed,action:()=>{if(localStorage.getItem('clashDailyGift')===today)return;localStorage.setItem('clashDailyGift',today);let coins=Number(localStorage.getItem('clashLegendsCoins')||0)+50;localStorage.setItem('clashLegendsCoins',coins);document.querySelector('#lobbyCoins').textContent='🪙 '+coins;close()}},{label:'🎨 SKINS · COMING SOON',action:()=>{title.textContent='SKINS COMING SOON'}},{label:'CLOSE',action:close}])};document.querySelector('#questsBtn').onclick=()=>coming('QUESTS');document.querySelector('#rankedBtn').onclick=()=>coming('RANKED');document.querySelector('#friendsBtn').onclick=()=>coming('FRIENDS');
-const road=[{t:25,c:60},{t:75,c:120},{t:150,c:200},{t:300,c:350},{t:500,c:500},{t:800,c:750},{t:1200,c:1000}];
-function trophyCount(){return Number(localStorage.getItem('clashLegendsTrophies')||0)}
-function claimIndex(){return Math.min(road.length,Math.max(0,Number(localStorage.getItem('clashRoadClaimed')||0)))}
-function renderRoad(){const idx=claimIndex(),total=trophyCount(),prev=idx?road[idx-1].t:0,next=road[idx];document.querySelector('#trackInfo').textContent=next?total+' / '+next.t:'ROAD COMPLETE';document.querySelector('#trackFill').style.width=(next?Math.max(0,Math.min(100,(total-prev)/(next.t-prev)*100)):100)+'%';document.querySelector('#trackButton').textContent=next&&total>=next.t?'🎁 CLAIM':'REWARDS'}
-function roadPopup(){const idx=claimIndex(),total=trophyCount(),next=road[idx];if(!next){show('🏆 TROPHY ROAD',[{label:'ALL REWARDS CLAIMED!',action:close}]);return}show('🏆 TROPHY ROAD',[{label:'Trophies: '+total+' / '+next.t,action:()=>{}},{label:'Next reward: 🪙 '+next.c+' coins',action:()=>{}},{label:total>=next.t?'🎁 CLAIM '+next.c+' COINS':'🔒 '+(next.t-total)+' MORE TROPHIES',selected:total>=next.t,action:()=>{if(trophyCount()<next.t)return;localStorage.setItem('clashRoadClaimed',idx+1);let coins=Number(localStorage.getItem('clashLegendsCoins')||0)+next.c;localStorage.setItem('clashLegendsCoins',coins);document.querySelector('#lobbyCoins').textContent='🪙 '+coins;renderRoad();roadPopup()}}])}
-document.querySelector('#trackButton').onclick=roadPopup;document.querySelector('#trophyTrack').onclick=e=>{if(e.target.id!=='trackButton')roadPopup()};renderRoad();
-document.querySelector('#questsBtn').textContent='📜 QUESTS';document.querySelector('#questsBtn').onclick=()=>{let m=Number(localStorage.getItem('clashLegendsMatches')||0),wins=Number(localStorage.getItem('clashLegendsWins')||0),claimed=localStorage.getItem('clashQuestClaimed')==='yes';show('📜 STARTER QUEST',[{label:'Play 3 matches: '+Math.min(3,m)+'/3',action:()=>{}},{label:'Win a match: '+Math.min(1,wins)+'/1',action:()=>{}},{label:claimed?'✓ 100 COINS CLAIMED':m>=3&&wins>=1?'🎁 CLAIM 100 COINS':'🔒 COMPLETE BOTH TASKS',selected:m>=3&&wins>=1&&!claimed,action:()=>{if(claimed||m<3||wins<1)return;localStorage.setItem('clashQuestClaimed','yes');let coins=Number(localStorage.getItem('clashLegendsCoins')||0)+100;localStorage.setItem('clashLegendsCoins',coins);document.querySelector('#lobbyCoins').textContent='🪙 '+coins;close()}}])};
-document.querySelector('#lobbyTrophies').textContent='🏆 '+Number(localStorage.getItem('clashLegendsTrophies')||0);document.querySelector('#lobbyCoins').textContent='🪙 '+Number(localStorage.getItem('clashLegendsCoins')||0);
+
+const road=[{t:25,c:60},{t:75,c:120},{t:150,c:200},{t:300,c:350},{t:500,c:500},{t:800,c:750},{t:1200,c:1000},{t:2000,c:1300},{t:3000,c:1800}];
+const popup=document.querySelector('#lobbyPopup'),options=document.querySelector('#popupOptions'),heading=document.querySelector('#popupTitle');
+function num(k){return Math.max(0,Number(localStorage.getItem(k)||0))}
+function claimIndex(){return Math.min(road.length,num('clashRoadClaimed'))}
+function renderRoad(){
+ const idx=claimIndex(),total=num('clashLegendsTrophies'),prev=idx?road[idx-1].t:0,next=road[idx];
+ document.querySelector('#trackInfo').textContent=next?total+' / '+next.t:'ROAD COMPLETE';
+ document.querySelector('#trackFill').style.width=(next?Math.max(0,Math.min(100,(total-prev)/(next.t-prev)*100)):100)+'%';
+ document.querySelector('#trackButton').textContent=next&&total>=next.t?'🎁 CLAIM':'REWARDS'
+}
+function roadPopup(){
+ const idx=claimIndex(),total=num('clashLegendsTrophies'),next=road[idx];
+ heading.textContent='🏆 TROPHY ROAD';options.replaceChildren();
+ const entries=next?[
+ ['🏆 YOUR TROPHIES: '+total+' / '+next.t],
+ ['🎁 NEXT REWARD: '+next.c+' COINS'],
+ [total>=next.t?'CLAIM '+next.c+' COINS':'🔒 '+(next.t-total)+' MORE TROPHIES',()=> {
+  if(num('clashLegendsTrophies')<next.t||claimIndex()!==idx)return;
+  localStorage.setItem('clashRoadClaimed',idx+1);
+  localStorage.setItem('clashLegendsCoins',num('clashLegendsCoins')+next.c);
+  renderRoad();window.clashLobbyRefresh?.();roadPopup()
+ }]
+ ]:[['⭐ ALL TROPHY ROAD REWARDS CLAIMED']];
+ for(const [label,action] of entries){const b=document.createElement('button');b.textContent=label;if(action)b.onclick=action;else b.disabled=true;options.appendChild(b)}
+ popup.style.display='flex'
+}
+document.querySelector('#trackButton').onclick=roadPopup;
+document.querySelector('#trophyTrack').addEventListener('click',e=>{if(!e.target.closest('#trackButton'))roadPopup()});
+document.querySelector('#modeCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();document.querySelector('#modesBtn').click()}};
+renderRoad();window.clashRefreshRoad=renderRoad;window.clashLobbyRefresh?.();
 })();
 </script></body></html>
