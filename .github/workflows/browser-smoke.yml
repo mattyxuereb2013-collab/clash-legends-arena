@@ -20,6 +20,7 @@ jobs:
           sleep 2
           node tests/smoke.cjs
           node tests/gameplay-matrix.cjs
+          node tests/progression.cjs
           node tests/online-duel.cjs
           node tests/quick-match.cjs
       - name: Keep screenshots for debugging
