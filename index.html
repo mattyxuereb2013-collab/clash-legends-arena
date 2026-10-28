@@ -428,7 +428,7 @@ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particl
 for(const num of hitNumbers)num.life-=dt;hitNumbers=hitNumbers.filter(num=>num.life>0);
 if(hero.x<stormMargin||hero.y<stormMargin||hero.x>worldW-stormMargin||hero.y>worldH-stormMargin){hero.hp-=22*dt;healDelay=5;hitFlash=Math.max(hitFlash,.15)}
 if(bots.every(b=>b.friendly)||hero.hp<=0){
-playing=false;document.body.classList.remove('game-active');document.querySelector('#pauseBtn').hidden=true;document.querySelector('#pauseOverlay').hidden=true;const victory=hero.hp>0,placement=victory?1:Math.max(2,Math.min(10,bots.length+1));
+playing=false;document.body.classList.remove('game-active');document.querySelector('#pauseBtn').hidden=true;document.querySelector('#pauseOverlay').hidden=true;const victory=hero.hp>0,placement=victory?1:Math.max(2,Math.min(10,bots.length+1)),onlineResult=localStorage.getItem('clashGameMode')==='duel';
 const fighterTrophyKey=["clashBoltTrophies","clashEmberTrophies","clashMossTrophies","clashVioletTrophies","clashFrostTrophies","clashRicochetTrophies","clashNovaTrophies","clashTerraTrophies"][selectedFighter],oldTotal=Math.max(0,Number(localStorage.getItem('clashLegendsTrophies')||0));if(localStorage.getItem(fighterTrophyKey)===null)localStorage.setItem(fighterTrophyKey,selectedFighter===0?oldTotal:0);const currentFighterTrophies=Math.max(0,Number(localStorage.getItem(fighterTrophyKey)||0));
 const baseRewards=[0,12,9,7,5,4,3,2,1,-2,-4],tier=Math.floor(currentFighterTrophies/200);
 sessionTrophies=Math.max(-currentFighterTrophies,baseRewards[placement]-tier);
@@ -438,15 +438,15 @@ if(localStorage.getItem('clashGameMode')==='training')sessionCoins=Math.min(sess
 localStorage.setItem(fighterTrophyKey,currentFighterTrophies+sessionTrophies);
 localStorage.setItem('clashLegendsTrophies',Math.max(0,oldTotal+sessionTrophies));
 localStorage.setItem('clashLegendsCoins',Number(localStorage.getItem('clashLegendsCoins')||0)+sessionCoins);
-localStorage.setItem('clashLegendsMatches',Number(localStorage.getItem('clashLegendsMatches')||0)+1);
-if(victory)localStorage.setItem('clashLegendsWins',Number(localStorage.getItem('clashLegendsWins')||0)+1);
+if(!onlineResult){localStorage.setItem('clashLegendsMatches',Number(localStorage.getItem('clashLegendsMatches')||0)+1);
+if(victory)localStorage.setItem('clashLegendsWins',Number(localStorage.getItem('clashLegendsWins')||0)+1)}
 try{const old=JSON.parse(localStorage.getItem('clashMatchHistory')||'[]'),history=Array.isArray(old)?old:[];history.unshift({at:new Date().toISOString(),fighter:['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'][selectedFighter],mode:localStorage.getItem('clashGameMode')||'showdown',place:placement,kills:showdownKills,trophies:sessionTrophies,coins:sessionCoins});localStorage.setItem('clashMatchHistory',JSON.stringify(history.slice(0,20)))}catch(e){console.warn('History not saved',e)}
 
 const today=new Date(),day=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 if(localStorage.getItem('clashDailyStatsDate')!==day){localStorage.setItem('clashDailyStatsDate',day);for(const k of ['Matches','Wins','Kills'])localStorage.setItem('clashDaily'+k,'0')}
 if(!['training','duel'].includes(localStorage.getItem('clashGameMode'))){localStorage.setItem('clashDailyMatches',Number(localStorage.getItem('clashDailyMatches')||0)+1);if(victory)localStorage.setItem('clashDailyWins',Number(localStorage.getItem('clashDailyWins')||0)+1);localStorage.setItem('clashDailyKills',Number(localStorage.getItem('clashDailyKills')||0)+showdownKills)}
 menu.style.display='flex';
-document.querySelector('#panel').innerHTML='<div class="result-screen"><div class="result-card"><div class="result-kicker">'+(victory?'VICTORY ROYALE':'MATCH COMPLETE')+'</div><div class="result-place">'+(victory?'🏆':'⭐')+' #'+placement+'</div><h1>'+(victory?'YOU ARE THE CHAMPION!':'GOOD FIGHT, LEGEND!')+'</h1><div class="result-fighter">'+['⚡ BOLT','🔥 EMBER','🌿 MOSS','💜 VIOLET','❄️ FROST','🎯 RICOCHET','🌟 NOVA','🪨 TERRA'][selectedFighter]+' · POWER '+fighterLevel()+'</div><div class="result-stats"><div><span>PLACEMENT</span><b>#'+placement+' / 10</b></div><div><span>ELIMINATIONS</span><b>💥 '+showdownKills+'</b></div><div><span>POWER CUBES</span><b>💚 '+hero.cubes+'</b></div></div><div class="result-rewards"><div>🏆 '+(sessionTrophies>0?'+':'')+sessionTrophies+' TROPHIES</div><div>🪙 +'+sessionCoins+' COINS</div></div><button id="again">RETURN TO LOBBY ▶</button></div></div>';
+document.querySelector('#panel').innerHTML='<div class="result-screen"><div class="result-card"><div class="result-kicker">'+(onlineResult?'ONLINE 1V1 · UNRANKED':victory?'VICTORY ROYALE':'MATCH COMPLETE')+'</div><div class="result-place">'+(onlineResult?(victory?'🏆 WIN':'💥 LOSS'):(victory?'🏆':'⭐')+' #'+placement)+'</div><h1>'+(onlineResult?(victory?'DUEL VICTORY!':'DUEL DEFEAT'):victory?'YOU ARE THE CHAMPION!':'GOOD FIGHT, LEGEND!')+'</h1><div class="result-fighter">'+['⚡ BOLT','🔥 EMBER','🌿 MOSS','💜 VIOLET','❄️ FROST','🎯 RICOCHET','🌟 NOVA','🪨 TERRA'][selectedFighter]+' · POWER '+fighterLevel()+'</div><div class="result-stats"><div><span>PLACEMENT</span><b>#'+placement+' / '+(onlineResult?2:10)+'</b></div><div><span>ELIMINATIONS</span><b>💥 '+(onlineResult?(victory?1:0):showdownKills)+'</b></div><div><span>POWER CUBES</span><b>💚 '+hero.cubes+'</b></div></div><div class="result-rewards">'+(onlineResult?'<div>🌐 FRIENDLY DUEL · NO RANKED REWARDS</div>':'<div>🏆 '+(sessionTrophies>0?'+':'')+sessionTrophies+' TROPHIES</div><div>🪙 +'+sessionCoins+' COINS</div>')+'</div><button id="again">RETURN TO LOBBY ▶</button></div></div>';
 document.querySelector('#again').onclick=()=>location.reload();
 if(window.clashLiveDuel?.active){window.clashLiveDuel.send('finish',{hp:Math.max(0,hero.hp)});window.clashLiveDuel.finish?.()}
 }
@@ -1268,7 +1268,7 @@ async function connectDuel(code,role){
  const live={active:false,host,peerStyle:0,peerLevel:1,clock:0,roomCode:code,
   send(event,data){if(duelChannel&&duelChannel===channel&&subscribed&&live.active)
    duelChannel.send({type:'broadcast',event,payload:{from:myId,...data}}).catch(e=>console.warn('Duel send:',e))},
-  finish(){live.active=false;leaveDuelRoom()}
+  finish(){live.active=false;setTimeout(()=>{if(duelChannel===channel)leaveDuelRoom()},1800)}
  };
  window.clashLiveDuel=live;
  view(host?'⚔️ ROOM CODE: '+code:'🔑 JOINING '+code,[
