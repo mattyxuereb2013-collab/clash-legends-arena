@@ -59,6 +59,14 @@ const base='http://127.0.0.1:8765/?e2e=1';
   assert.equal(bush.revealedClose,false,'nearby opponents should reveal someone in bushes');
   assert.equal(bush.revealedAfterShot,false,'shooting from bushes should reveal the shooter');
   await page.waitForTimeout(500);
+  // Real desktop pointer input must spend ammo and create a directed projectile.
+  const beforeShot=await page.evaluate(()=>window.__clashTest.snapshot());
+  await page.mouse.move(980,370);
+  await page.mouse.down();
+  await page.mouse.up();
+  const afterShot=await page.evaluate(()=>window.__clashTest.snapshot());
+  assert.equal(afterShot.ammo,beforeShot.ammo-1,'mouse click should consume one ammo');
+  assert(afterShot.lastPlayerShot&&afterShot.lastPlayerShot.vx>0,'shot should travel toward the cursor on the right');
   await page.screenshot({path:'arena-desktop.png'});
   await page.evaluate(()=>window.__clashTest.forceWin());
   await page.waitForSelector('.result-card',{timeout:12000});
