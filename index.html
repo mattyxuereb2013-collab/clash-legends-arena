@@ -1051,18 +1051,41 @@ try{
   add(hero,sphere,eyes,.34,3.09,.83,.22,.28,.10);
   add(hero,sphere,pupils,-.31,3.06,.91,.10,.16,.08);
   add(hero,sphere,pupils,.37,3.06,.91,.10,.16,.08);
-  add(hero,sphere,skin,-1.02,1.72,0,.36,.65,.39);
-  add(hero,sphere,skin,1.02,1.72,0,.36,.65,.39);
-  add(hero,sphere,shadow,-1.04,2.1,0,.42,.33,.43);
-  add(hero,sphere,shadow,1.04,2.1,0,.42,.33,.43);
+  const armA=new T.Group(),armB=new T.Group();
+  armA.position.set(-1.0,2.1,0);armB.position.set(1.0,2.1,0);
+  hero.add(armA,armB);parts.armA=armA;parts.armB=armB;
+  add(armA,sphere,suit,-.12,-.3,0,.37,.45,.39);
+  add(armA,sphere,skin,-.15,-.83,.18,.30,.36,.34);
+  add(armB,sphere,suit,.12,-.3,0,.37,.45,.39);
+  add(armB,sphere,skin,.15,-.83,.18,.30,.36,.34);
+  add(hero,sphere,accent,-1.07,2.16,0,.46,.31,.45);
+  add(hero,sphere,accent,1.07,2.16,0,.46,.31,.45);
+  add(hero,sphere,shadow,0,1.28,.54,.68,.22,.22);
+  add(hero,sphere,accent,0,1.65,.67,.42,.17,.12);
+  for(const xx of [-.35,.35]){
+   const eyebrow=add(hero,sphere,shadow,xx,3.46,.82,.29,.085,.09);
+   eyebrow.rotation.z=xx<0?.1:-.1
+  }
+  add(hero,sphere,skin,-.66,2.82,.61,.17,.12,.09);
+  add(hero,sphere,skin,.66,2.82,.61,.17,.12,.09);
   const gun=new T.Group();gun.position.set(1.05,1.9,.4);gun.rotation.z=-.22;
-  hero.add(gun);add(gun,box,shadow,.36,0,.04,.95,.48,.62);
-  add(gun,box,accent,.83,.02,.04,.36,.34,.49);
+  hero.add(gun);
+  add(gun,sphere,shadow,.36,0,.04,.63,.35,.4);
+  add(gun,sphere,accent,.85,.02,.04,.28,.27,.30);
+  add(gun,sphere,pants,.16,-.32,.05,.20,.34,.18);
   add(gun,cylinder,pants,1.06,.01,.04,.36,.2,.36).rotation.z=Math.PI/2;
   if(index===1||index===6){add(hero,sphere,accent,-.36,3.85,-.25,.38,.28,.4);add(hero,sphere,accent,.39,3.77,-.33,.27,.33,.4)}
   if(index===2){add(hero,sphere,shadow,-.38,3.8,-.18,.62,.34,.7);add(hero,sphere,accent,.46,3.79,-.24,.48,.31,.66)}
   if(index===3||index===4){add(hero,box,shadow,0,3.85,-.1,1.47,.35,1.04);add(hero,sphere,accent,0,3.97,.15,.42,.13,.5)}
   if(index===5||index===7){add(hero,cylinder,shadow,0,3.92,-.10,1.12,.28,1.06);add(hero,cylinder,accent,0,3.81,-.10,1.45,.11,1.37)}
+  if(index===0){add(hero,sphere,accent,0,4.12,-.1,.15,.25,.19);add(hero,sphere,accent,0,2.5,-.64,.42,.33,.22)}
+  if(index===1){for(const dx of [-.35,.35])add(hero,sphere,accent,dx,4.06,-.17,.22,.29,.22)}
+  if(index===2){add(hero,sphere,accent,0,4.09,-.28,.28,.29,.24);add(hero,sphere,shadow,0,2.3,-.7,.53,.65,.21)}
+  if(index===3){for(const dx of [-.42,.42])add(hero,sphere,accent,dx,4.13,-.15,.19,.34,.16)}
+  if(index===4){add(hero,sphere,accent,0,4.12,-.22,.66,.16,.53)}
+  if(index===5){add(hero,sphere,pants,0,3.27,.90,.55,.12,.16)}
+  if(index===6){add(hero,sphere,accent,0,1.7,.72,.28,.28,.18)}
+  if(index===7){for(const dx of [-1.07,1.07])add(hero,sphere,shadow,dx,2.2,-.1,.55,.42,.53)}
   lastIndex=index;lastSkin=variant;
  }
  let w=0,h=0;
@@ -1078,7 +1101,8 @@ try{
   const t=now*.001;
   hero.rotation.y=-.2+Math.sin(t*.7)*.17;
   hero.position.y=.06+Math.sin(t*2.2)*.06;
-  if(parts.legL&&parts.legR){parts.legL.rotation.z=Math.sin(t*2.6)*.06;parts.legR.rotation.z=-Math.sin(t*2.6)*.06}
+  if(parts.legL&&parts.legR){parts.legL.rotation.z=Math.sin(t*2.6)*.08;parts.legR.rotation.z=-Math.sin(t*2.6)*.08}
+  if(parts.armA&&parts.armB){parts.armA.rotation.x=Math.sin(t*2.2)*.12;parts.armB.rotation.x=-Math.sin(t*2.2)*.12}
   renderer.render(scene,camera);
  }
  stage.classList.add('webgl-loaded');requestAnimationFrame(frame);
