@@ -198,7 +198,7 @@ function refresh(){
  if($('lobbyCoins'))$('lobbyCoins').textContent='🪙 '+coins();
  const i=selected(),lv=Math.max(1,num(key(i,'Level'))),t=num(key(i,'Trophies'));
  if($('fighterName'))$('fighterName').textContent=names[i];
- if($('fighterSubtitle'))$('fighterSubtitle').textContent=['⚡ PRECISION BLASTER','🔥 FIRESTORM FIGHTER','🌿 NATURE GUARDIAN','💜 SHADOW STRIKER','❄️ FREEZING ARTILLERY','🎯 TRIPLE-SHOT ACE','🌟 STAR-BURST SPECIALIST','🪨 STONE STRIKER'][i];
+ if($('fighterSubtitle'))$('fighterSubtitle').textContent=['⚡ PRECISION BLASTER','🔥 FIRESTORM FIGHTER','🌿 NATURE GUARDIAN','💜 SHADOW STRIKER','❄️ FREEZING ARTILLERY','🎯 TRIPLE-SHOT ACE','🌟 STAR-BURST SPECIALIST','🪨 STONE STRIKER'][i]+(['',' · ✨ GOLDEN',' · 🌑 SHADOW'][Number(localStorage.getItem('clashSkin'+names[i])||0)]||'');
  if($('fighterArt')){$('fighterArt').style.setProperty('--fighter',colors[i]);$('fighterArt').style.setProperty('--fighter-dark',darks[i])}
  if(window.clashRefreshRoad)window.clashRefreshRoad();
 }
@@ -223,6 +223,23 @@ function upgrade(){
  ])
 }
 function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function cosmeticShop(){
+ const i=selected(),n=names[i],choice=Math.min(2,Math.max(0,Number(localStorage.getItem('clashSkin'+n)||0)));
+ const variants=[{name:'ORIGINAL',price:0},{name:'GOLDEN',price:300},{name:'SHADOW',price:450}];
+ screen('🎨 '+n+' SKINS',[
+  {label:'🪙 WALLET '+coins(),disabled:true},
+  ...variants.map((v,id)=>{
+   const owned=id===0||localStorage.getItem('clashSkinOwned'+n+id)==='yes';
+   return {label:(choice===id?'✓ ':'')+v.name+(owned?' · '+(choice===id?'EQUIPPED':'EQUIP'):' · '+v.price+' 🪙'),selected:choice===id,action:()=>{
+    if(!owned){if(coins()<v.price){notify('🪙 NEED '+(v.price-coins())+' MORE COINS',cosmeticShop);return}
+     localStorage.setItem('clashLegendsCoins',coins()-v.price);
+     localStorage.setItem('clashSkinOwned'+n+id,'yes')}
+    localStorage.setItem('clashSkin'+n,String(id));refresh();cosmeticShop()
+   }}
+  }),
+  {label:'◀ BACK TO SHOP',action:shop}
+ ])
+}
 function shop(){const claimed=localStorage.getItem('clashDailyGift')===today();
  screen('🛒 LEGENDS SHOP',[
   {label:'🪙 WALLET '+coins(),disabled:true},
@@ -231,6 +248,7 @@ function shop(){const claimed=localStorage.getItem('clashDailyGift')===today();
    localStorage.setItem('clashDailyGift',today());localStorage.setItem('clashLegendsCoins',coins()+50);refresh();shop()
   }},
   {label:'⬆ UPGRADE '+names[selected()],action:upgrade},
+  {label:'🎨 COSMETIC SKINS',action:cosmeticShop},
   {label:'🦸 BRAWLER COLLECTION',action:fighters}
  ])}
 const questDefs=[
@@ -517,8 +535,9 @@ function build3(){
 }
 function createFighter3(style,me){
  const g=gfx3,T=g.T,body=new T.Group(),palette=[0x2a8af0,0xf36a45,0x5baf61,0xaa61db,0x50b8d7,0xe9b646,0xe85b98,0xb48b66];
- const main=palette[style%8],trim=[0x8cdfff,0xffcc79,0xc1ed76,0xe4b6ff,0xc4f6ff,0xffee99,0xffcee8,0xe4c49c][style%8];
- const dark=[0x204b99,0xa83d36,0x2e7147,0x603b98,0x236c94,0x996626,0x8f326c,0x6b4d38][style%8];
+ const variant=me?Number(localStorage.getItem('clashSkin'+['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'][style%8])||0):0;
+ const main=variant===1?0xf6c955:variant===2?0x766e9c:palette[style%8],trim=variant===1?0xffeca5:variant===2?0xcac2ff:[0x8cdfff,0xffcc79,0xc1ed76,0xe4b6ff,0xc4f6ff,0xffee99,0xffcee8,0xe4c49c][style%8];
+ const dark=variant===1?0x9e742c:variant===2?0x363052:[0x204b99,0xa83d36,0x2e7147,0x603b98,0x236c94,0x996626,0x8f326c,0x6b4d38][style%8];
  const skin=[0xf0b991,0xedb18e,0xdbb48e,0xe7acb4,0xdec4aa,0xe9b893,0xf0b9aa,0xc99f7e][style%8];
  const root=new T.Group();g.moving.add(root);g.unitViews.push(root);root.add(body);
  const shadow=new T.Mesh(new T.CircleGeometry(34,26),new T.MeshBasicMaterial({color:me?0x192e7b:0x321d31,transparent:true,opacity:.31,depthWrite:false}));
@@ -625,6 +644,7 @@ for(let crate of crates){if(crate.hp<=0)continue;roundRect(crate.x-19,crate.y-19
 function drawFighter(o,style,angle=0,player=false){
 const k=style%4,tm=performance.now()/1000,step=Math.sin(tm*10+o.x*.03)*2.5;const walking=Math.abs(o.vx||0)+Math.abs(o.vy||0)>.5;const bob=walking?Math.sin(tm*13+o.x*.03)*2.2:Math.sin(tm*3+o.x*.02)*.8;
 const outfits=['#1766b8','#b53730','#347e55','#6132a4'],trim=['#44ceff','#ffb54f','#a5e46c','#da9aff'],skin=['#f0b88c','#f3b18b','#bad69e','#e4a9c7'],dark=['#163b74','#732c38','#28553f','#38205e'];
+if(player){const skinVariant=Number(localStorage.getItem('clashSkin'+['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'][style%8])||0);if(skinVariant===1){outfits[k]='#e5af3c';trim[k]='#ffed9e';dark[k]='#8b5b25'}else if(skinVariant===2){outfits[k]='#716a95';trim[k]='#c2a8ec';dark[k]='#3a315d'}}
 const outline='#252440';
 function blob(cx,cy,rx,ry,color,stroke=outline,lw=2.8){x.beginPath();x.ellipse(cx,cy,rx,ry,0,0,7);x.fillStyle=color;x.fill();if(lw){x.strokeStyle=stroke;x.lineWidth=lw;x.stroke()}}
 function path(points,color,lw=2.8){x.beginPath();x.moveTo(points[0][0],points[0][1]);for(let i=1;i<points.length;i++)x.lineTo(points[i][0],points[i][1]);x.closePath();x.fillStyle=color;x.fill();x.lineWidth=lw;x.strokeStyle=outline;x.stroke()}
@@ -708,7 +728,7 @@ if(localStorage.getItem('clashPlayerName')&&localStorage.getItem('clashDevice'))
 const fighters=[{name:'BOLT',color:'#38b6ff',dark:'#236bc2',sub:'⚡ STARTER FIGHTER · POWER 1'},{name:'EMBER',color:'#ff9852',dark:'#cf4839',sub:'🔥 FIRE SPECIALIST · POWER 1'},{name:'MOSS',color:'#8fe36a',dark:'#3d9b56',sub:'🌿 NATURE GUARDIAN · POWER 1'},{name:'VIOLET',color:'#dc88fa',dark:'#7846bd',sub:'💜 SHADOW STRIKER · POWER 1'},{name:'FROST',color:'#7ce8ff',dark:'#2587a4',sub:'❄️ ICE CANNON · POWER 1'},{name:'RICOCHET',color:'#ffd064',dark:'#ac6c28',sub:'🎯 TRIPLE SHOT · POWER 1'},{name:'NOVA',color:'#ff7ab5',dark:'#ad3c75',sub:'🌟 STAR BURST · POWER 1'},{name:'TERRA',color:'#c49a70',dark:'#765138',sub:'🪨 STONE STRIKER · POWER 1'}];
 const preview=document.querySelector('#lobbyFighterCanvas'),g=preview.getContext('2d');
 function lobbyFighter(t){
-const i=Number(localStorage.getItem('clashLegendsFighter')||0)%8,f=fighters[i],u=t*.001,bob=Math.sin(u*2)*4;
+const i=Number(localStorage.getItem('clashLegendsFighter')||0)%8,variant=Number(localStorage.getItem('clashSkin'+fighters[i].name)||0),f=variant===1?{...fighters[i],color:'#f6c955',dark:'#ae7d2b'}:variant===2?{...fighters[i],color:'#766e9c',dark:'#393358'}:fighters[i],u=t*.001,bob=Math.sin(u*2)*4;
 g.clearRect(0,0,420,460);g.save();g.translate(210,240+bob);
 function ellipse(cx,cy,rx,ry,col){g.fillStyle=col;g.beginPath();g.ellipse(cx,cy,rx,ry,0,0,7);g.fill()}
 function shape(col,stroke='#28204d',lw=9){g.fillStyle=col;g.strokeStyle=stroke;g.lineWidth=lw;g.lineJoin='round';g.fill();g.stroke()}
@@ -801,10 +821,10 @@ try{
  }
  const pad=new T.Mesh(new T.CylinderGeometry(1.85,1.75,.24,40),makeMat(0x373077));pad.position.y=-.05;scene.add(pad);
  const padTop=new T.Mesh(new T.CylinderGeometry(1.66,1.67,.09,40),makeMat(0x7771c9));padTop.position.y=.13;scene.add(padTop);
- let lastIndex=-1;
- function rebuild(index){
+ let lastIndex=-1,lastSkin=-1;
+ function rebuild(index,variant){
   while(hero.children.length){const o=hero.children[0];hero.remove(o)}
-  const suit=makeMat(palette[index]),accent=makeMat(trim[index]),shadow=makeMat(dark[index]),pants=makeMat(cloth[index]),skin=makeMat(index===2?0xe0c79b:0xf2bb94);
+  const suit=makeMat(variant===1?0xf6c955:variant===2?0x766e9c:palette[index]),accent=makeMat(variant===1?0xffeca5:variant===2?0xcac2ff:trim[index]),shadow=makeMat(variant===1?0x9e742c:variant===2?0x363052:dark[index]),pants=makeMat(cloth[index]),skin=makeMat(index===2?0xe0c79b:0xf2bb94);
   const eyes=makeMat(0xffffff),pupils=makeMat(0x21223b);
   parts.legL=add(hero,sphere,pants,-.4,.52,0,.32,.56,.4);
   parts.legR=add(hero,sphere,pants,.4,.52,0,.32,.56,.4);
@@ -828,7 +848,7 @@ try{
   if(index===2){add(hero,sphere,shadow,-.38,3.8,-.18,.62,.34,.7);add(hero,sphere,accent,.46,3.79,-.24,.48,.31,.66)}
   if(index===3||index===4){add(hero,box,shadow,0,3.85,-.1,1.47,.35,1.04);add(hero,sphere,accent,0,3.97,.15,.42,.13,.5)}
   if(index===5||index===7){add(hero,cylinder,shadow,0,3.92,-.10,1.12,.28,1.06);add(hero,cylinder,accent,0,3.81,-.10,1.45,.11,1.37)}
-  lastIndex=index;
+  lastIndex=index;lastSkin=variant;
  }
  let w=0,h=0;
  function frame(now){
@@ -838,7 +858,8 @@ try{
   if(width<50||height<50)return;
   if(width!==w||height!==h){w=width;h=height;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
   const n=Math.max(0,Math.min(7,Number(localStorage.getItem('clashLegendsFighter')||0)));
-  if(n!==lastIndex)rebuild(n);
+  const variants=['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'];const skinVariant=Number(localStorage.getItem('clashSkin'+variants[n])||0);
+  if(n!==lastIndex||skinVariant!==lastSkin)rebuild(n,skinVariant);
   const t=now*.001;
   hero.rotation.y=-.2+Math.sin(t*.7)*.17;
   hero.position.y=.06+Math.sin(t*2.2)*.06;
