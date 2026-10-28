@@ -55,7 +55,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   await page.locator('#start').click();
   await page.evaluate(()=>window.__clashTest.skipIntro());
   await page.evaluate(()=>window.__clashTest.triggerSuper());
-  assert.match(await page.locator('#hyperButton').innerText(),/3[0-9]%/);
+  await page.waitForFunction(()=>/3[0-9]%/.test(document.querySelector('#hyperButton')?.textContent||''),null,{timeout:4000});
   console.log('PASS Hypercharge purchase, points cost and battle charging');
   assert.deepEqual(errors,[],'uncaught browser exceptions');
  }finally{await browser.close()}
