@@ -514,10 +514,10 @@ function init3(){
   const tris=[];for(let i=1;i<=20;i++)tris.push(0,i,i+1);
   aimGeo.setAttribute('position',new T.Float32BufferAttribute(verts,3));aimGeo.setIndex(tris);aimGeo.computeVertexNormals();
   const aimMesh=new T.Mesh(aimGeo,new T.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:.16,depthWrite:false,side:T.DoubleSide}));aimMesh.position.y=7;moving.add(aimMesh);
-  const shotGeo=geo('shot',()=>new T.SphereGeometry(1,10,7)),cubeGeo=geo('cube',()=>new T.OctahedronGeometry(1,0)),particleGeo=geo('particle',()=>new T.DodecahedronGeometry(1,0));
+  const shotGeo=geo('shot',()=>new T.SphereGeometry(1,10,7)),trailGeo=geo('shotTrail',()=>new T.CylinderGeometry(1,1,1,8)),cubeGeo=geo('cube',()=>new T.OctahedronGeometry(1,0)),particleGeo=geo('particle',()=>new T.DodecahedronGeometry(1,0));
   const stormM=new T.MeshBasicMaterial({color:0xb53ef3,transparent:true,opacity:.37,depthWrite:false,side:T.DoubleSide});
   const storms=Array.from({length:4},()=>{let p=new T.Mesh(new T.PlaneGeometry(1,1),stormM);p.rotation.x=-Math.PI/2;p.position.y=6;scene.add(p);return p});
-  gfx3={T,r,scene,camera,floor,fixed,moving,mat,geo,bx,sphere,round,shotGeo,cubeGeo,particleGeo,ray,aimPlane,mouseHit,aimMesh,storms,units:new WeakMap(),unitViews:[],crateViews:[],shotViews:[],dropViews:[],particleViews:[],ready:false};
+  gfx3={T,r,scene,camera,floor,fixed,moving,mat,geo,bx,sphere,round,shotGeo,trailGeo,cubeGeo,particleGeo,ray,aimPlane,mouseHit,aimMesh,storms,units:new WeakMap(),unitViews:[],crateViews:[],shotViews:[],trailViews:[],dropViews:[],particleViews:[],ready:false};
   resize3();
  }catch(e){failed3=true;console.error('3D renderer failed:',e);const v=document.getElementById('threeView');v.style.display='none'}
 }
@@ -542,6 +542,7 @@ function build3(){
  for(const v of g.crateViews)g.moving.remove(v);g.crateViews.length=0;
  for(const v of g.unitViews)g.moving.remove(v);g.unitViews.length=0;g.units=new WeakMap();
  for(const v of g.shotViews)g.moving.remove(v);g.shotViews.length=0;
+ for(const v of g.trailViews)g.moving.remove(v);g.trailViews.length=0;
  for(const v of g.dropViews)g.moving.remove(v);g.dropViews.length=0;
  for(const v of g.particleViews)g.moving.remove(v);g.particleViews.length=0;
  // Layered, bevel-like masonry with capstones, brick seams, and warm rim highlights.
@@ -772,10 +773,23 @@ function render3(){
  for(let i=0;i<shots.length;i++){
   const p=shots[i];let m=g.shotViews[i];
   if(!m){m=mesh3(g.moving,g.shotGeo,g.mat(0xffe17c,0xffab24),0,0,0);g.shotViews.push(m)}
-  m.visible=true;m.position.set(p.x,39,p.y);m.scale.set(p.r,p.r,p.r);
-  m.material=g.mat(p.team===0?0x78e5ff:p.enemy?0xff5e77:0xffe17c,p.team===0?0x368dc7:p.enemy?0xba254f:0xeaa631);
+  m.visible=true;m.position.set(p.x,38,p.y);m.scale.set(p.r*1.08,p.r*1.08,p.r*1.08);
+  const hue=p.color?new T.Color(p.color).getHex():p.team===0?0x78e5ff:p.enemy?0xff5e77:0xffe17c;
+  m.material=g.mat(hue,hue);
+  // A slender energy streak makes attack direction readable on small screens.
+  let streak=g.trailViews[i];
+  if(!streak){streak=mesh3(g.moving,g.trailGeo,g.mat(0xffffff),0,0,0);streak.castShadow=false;streak.receiveShadow=false;g.trailViews.push(streak)}
+  const velocity=Math.hypot(p.vx,p.vy)||1;
+  const len=Math.min(52,velocity*.07);
+  streak.visible=true;
+  streak.material=m.material;
+  streak.position.set(p.x-p.vx/velocity*len*.47,37,p.y-p.vy/velocity*len*.47);
+  streak.scale.set(Math.max(1.7,p.r*.44),len,Math.max(1.7,p.r*.44));
+  streak.rotation.set(0,0,0);
+  streak.quaternion.setFromUnitVectors(g.upVec||(g.upVec=new T.Vector3(0,1,0)),new T.Vector3(p.vx/velocity,0,p.vy/velocity));
  }
  for(let i=shots.length;i<g.shotViews.length;i++)g.shotViews[i].visible=false;
+ for(let i=shots.length;i<g.trailViews.length;i++)g.trailViews[i].visible=false;
  for(let i=0;i<drops.length;i++){
   const p=drops[i];let m=g.dropViews[i];
   if(!m){m=mesh3(g.moving,g.cubeGeo,g.mat(0x81ff72,0x245b12),0,0,0);g.dropViews.push(m)}
