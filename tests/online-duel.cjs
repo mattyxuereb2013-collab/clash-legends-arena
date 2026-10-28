@@ -31,6 +31,7 @@ const assert=require('node:assert/strict');
   await guest.waitForFunction(()=>window.__clashTest?.snapshot().heroHP<100,{timeout:8000});
   const guestHP=await guest.evaluate(()=>window.__clashTest.snapshot().heroHP);
   assert(guestHP>0&&guestHP<100,'received online projectile should damage guest locally');
+  assert((await guest.evaluate(()=>window.__clashTest.snapshot().damageNumbers))>0,'incoming online hit should produce a visible damage indicator');
   console.log('PASS: live attack broadcast caused damage on remote client (guest HP '+guestHP+')');
   assert.equal(await guest.evaluate(()=>localStorage.getItem('clashGameMode')),'duel');
   await host.evaluate(()=>window.__clashTest.forceWin());
