@@ -1090,6 +1090,99 @@ async function decide(id,status){
  if(r.error){notice('FRIEND REQUEST FAILED: '+r.error.message);return}
  online()
 }
+
+/* Public-code, unranked two-person duel. Uses Realtime broadcast for movement
+   and presence only for join/leave; competitive trophies are never awarded. */
+let duelChannel=null,duelStarted=false,duelPeer='',duelId='';
+const codeAlphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function randomRoomCode(){
+ const bytes=new Uint8Array(8);crypto.getRandomValues(bytes);
+ return Array.from(bytes,b=>codeAlphabet[b%codeAlphabet.length]).join('')
+}
+async function leaveDuelRoom(){
+ if(window.clashLiveDuel)window.clashLiveDuel.active=false;
+ duelStarted=false;duelPeer='';
+ if(duelChannel&&api){const old=duelChannel;duelChannel=null;try{await api.removeChannel(old)}catch(e){console.warn('Duel cleanup',e)}}
+}
+function duelMenu(){
+ view('🌐 ONLINE 1V1 · BETA',[
+  {label:'⚔️ CREATE PRIVATE ROOM',action:()=>connectDuel(randomRoomCode(),'host')},
+  {label:'🔑 JOIN WITH ROOM CODE',action:joinDuelForm},
+  {label:'TWO PLAYERS · NO BOTS · NO TROPHIES',disabled:true},
+  {label:'ROOM CODE IS YOUR INVITE · SHARE IT PRIVATELY',disabled:true},
+  {label:'BETA: PEER-TO-PEER STATE, NOT RANKED',disabled:true}
+ ])
+}
+function joinDuelForm(){
+ heading.textContent='🔑 ENTER ONLINE ROOM CODE';options.replaceChildren();popup.style.display='flex';
+ const input=field('text','8-character code',8);
+ input.style.textTransform='uppercase';
+ const join=document.createElement('button');join.type='button';join.textContent='JOIN ROOM';options.appendChild(join);
+ join.onclick=()=>{const code=input.value.trim().toUpperCase();if(!/^[A-HJ-NP-Z2-9]{8}$/.test(code)){notice('INVALID 8-CHARACTER ROOM CODE',joinDuelForm);return}connectDuel(code,'guest')};
+ const back=document.createElement('button');back.type='button';back.textContent='◀ BACK';back.onclick=duelMenu;options.appendChild(back)
+}
+async function connectDuel(code,role){
+ if(!api?.channel){notice('ONLINE REALTIME SERVICE IS UNAVAILABLE',duelMenu);return}
+ await leaveDuelRoom();
+ const myId=crypto.randomUUID(),host=role==='host';
+ duelId=myId;
+ const fighter=Math.max(0,Math.min(7,Number(localStorage.getItem('clashLegendsFighter')||0)));
+ const fighters=['Bolt','Ember','Moss','Violet','Frost','Ricochet','Nova','Terra'];
+ const level=Math.max(1,Math.min(10,Number(localStorage.getItem('clash'+fighters[fighter]+'Level')||1)));
+ const name=String(localStorage.getItem('clashPlayerName')||'LEGEND').slice(0,18);
+ let subscribed=false;
+ const live={active:false,host,peerStyle:0,peerLevel:1,clock:0,roomCode:code,
+  send(event,data){if(duelChannel&&duelChannel===channel&&subscribed&&live.active)
+   duelChannel.send({type:'broadcast',event,payload:{from:myId,...data}}).catch(e=>console.warn('Duel send:',e))},
+  finish(){live.active=false;leaveDuelRoom()}
+ };
+ window.clashLiveDuel=live;
+ view(host?'⚔️ ROOM CODE: '+code:'🔑 JOINING '+code,[
+  {label:host?'SHARE THIS CODE WITH YOUR FRIEND':'CONNECTING TO YOUR FRIEND...',disabled:true},
+  {label:'WAITING FOR BOTH PLAYERS',disabled:true},
+  {label:'✕ CANCEL ROOM',action:()=>{leaveDuelRoom();duelMenu()}}
+ ]);
+ const channel=api.channel('clash-duel-'+code,{config:{presence:{key:myId},broadcast:{self:false}}});
+ duelChannel=channel;
+ function sync(){
+  if(duelChannel!==channel)return;
+  const people=Object.values(channel.presenceState()).flat().filter(p=>p&&p.id&&p.role);
+  const other=people.find(p=>p.id!==myId&&p.role!==(host?'host':'guest'));
+  if(people.length>2&&!duelStarted){leaveDuelRoom();notice('ROOM ALREADY FULL',duelMenu);return}
+  if(!other){if(duelStarted){live.active=false;window.clashGameDuelDisconnected?.();leaveDuelRoom()}return}
+  duelPeer=other.id;
+  if(!duelStarted){
+   duelStarted=true;
+   live.peerStyle=Math.max(0,Math.min(7,Number(other.fighter)||0));
+   live.peerLevel=Math.max(1,Math.min(10,Number(other.level)||1));
+   live.active=true;
+   localStorage.setItem('clashGameMode','duel');
+   const modeTitle=document.querySelector('#modeTitle');
+   if(modeTitle)modeTitle.textContent='ONLINE 1V1 · BETA';
+   popup.style.display='none';
+   document.querySelector('#start').click();
+  }
+ }
+ channel
+  .on('presence',{event:'sync'},sync)
+  .on('broadcast',{event:'state'},({payload:p})=>{if(live.active&&p?.from===duelPeer)window.clashGameReceiveFrame?.(p)})
+  .on('broadcast',{event:'fire'},({payload:p})=>{if(live.active&&p?.from===duelPeer)window.clashGameReceiveShot?.(p)})
+  .on('broadcast',{event:'finish'},({payload:p})=>{if(live.active&&p?.from===duelPeer)window.clashGameReceiveFrame?.({...p,x:NaN,y:NaN})})
+  .subscribe(async status=>{
+   if(duelChannel!==channel)return;
+   if(status==='SUBSCRIBED'){
+    subscribed=true;
+    try{await channel.track({id:myId,role,fighter,level,name})}
+    catch(e){notice('ONLINE ROOM CONNECTION FAILED',duelMenu);leaveDuelRoom()}
+   }else if(status==='CHANNEL_ERROR'||status==='TIMED_OUT'||status==='CLOSED'){
+    if(duelStarted){live.active=false;window.clashGameDuelDisconnected?.()}
+    else notice('REALTIME CONNECTION FAILED: '+status,duelMenu);
+    leaveDuelRoom()
+   }
+  });
+}
+document.querySelector('#popupClose').addEventListener('click',()=>{if(duelChannel&&!duelStarted)leaveDuelRoom()});
+window.clashOnlineDuel=duelMenu;
 window.clashOnlineFriends=online;
 })();
 </script></body></html>
