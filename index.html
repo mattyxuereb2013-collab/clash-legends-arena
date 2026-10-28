@@ -36,7 +36,34 @@
 @media(max-width:650px){#panel{gap:8px;padding:10px}.lobby-main{grid-template-columns:90px minmax(120px,1fr) 90px;min-height:280px;gap:5px}.lobby-rail button{font-size:11px;padding:11px 4px}.fighter-art{width:150px;height:180px}.fighter-name{font-size:24px}.profile{padding:4px}.currency{padding:6px;font-size:12px}.lobby-bottom{gap:8px}.mode-card{min-width:190px}.lobby-footer{font-size:10px}}
 #welcomeGate{position:fixed;inset:0;z-index:20;background:radial-gradient(circle at 50% 35%,#6949c6,#20174f 75%);display:flex;align-items:center;justify-content:center;padding:18px;color:#fff;text-align:center}#welcomeGate[hidden]{display:none}#welcomeCard{width:min(460px,100%);padding:28px 23px;background:linear-gradient(150deg,#44329a,#25205e);border:4px solid #a59af7;border-radius:25px;box-shadow:0 16px 0 #100d35,0 20px 35px #0007}#welcomeCard h2{font-size:clamp(30px,7vw,45px);color:#ffdb57;text-shadow:3px 4px #171341;margin:5px 0 10px}#welcomeCard p{color:#e0dafa;font-weight:700}#welcomeName{width:100%;border-radius:13px;border:3px solid #8c8de4;padding:14px;font-size:18px;font-weight:800;background:#17174b;color:#fff;outline:none}#welcomeName:focus{border-color:#ffda60}.deviceChoices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.deviceChoices button{font-size:17px;padding:16px 8px;background:#393a87;color:#fff;box-shadow:0 5px #1b1c53;border:3px solid #7173b6}.deviceChoices button.chosen{background:#138e9b;border-color:#adfff0;box-shadow:0 5px #08525b}#welcomeGo{width:100%}#welcomeError{min-height:20px;color:#ffb1be;font-weight:800}#profileSignout{font-size:11px;padding:5px 9px;box-shadow:none;background:#494a9d;color:#fff;border:1px solid #aaa6f9}
 #matchIntro{position:fixed;inset:0;z-index:12;display:none;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(circle at 50% 30%,#344c92 0%,#101b39 75%);padding:16px;color:#fff;text-align:center;pointer-events:auto}#matchIntro h2{margin:0 0 12px;font-size:clamp(24px,5vw,45px);font-weight:1000;color:#ffe05d;text-shadow:0 5px #131b48}#matchIntro p{font-weight:800;letter-spacing:1px}#roster{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:clamp(4px,1.5vw,14px);width:min(820px,98vw)}.roster-card{border:3px solid #6e87bb;background:linear-gradient(160deg,#466db5,#1c2d5b);border-radius:14px;min-width:0;padding:8px 3px 10px;box-shadow:0 6px #080e27}.roster-card.me{border-color:#ffdd5d;background:linear-gradient(160deg,#a17932,#423562)}.roster-avatar{font-size:clamp(23px,6vw,58px);height:clamp(45px,11vh,92px);display:grid;place-items:center;text-shadow:0 4px #10172c}.roster-card b{display:block;font-size:clamp(9px,2vw,16px);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.roster-card small{font-size:10px;color:#e6d7a8}#introSub{color:#dce6ff;margin-top:18px;font-size:clamp(12px,2.4vw,18px)}@media(max-height:480px){.roster-avatar{height:36px;font-size:28px}.roster-card{padding:3px}.roster-card b{font-size:10px}#matchIntro h2{margin:0 0 5px}} 
-@media (orientation:landscape) and (pointer:coarse){#hud{top:5px;left:14px;right:14px;font-size:13px}#stick{left:max(22px,env(safe-area-inset-left));bottom:15px;width:116px;height:116px}#knob{left:33px;top:33px}#fire{right:max(22px,env(safe-area-inset-right));bottom:16px;width:100px;height:100px}#super{right:135px;bottom:26px;width:70px;height:70px}#status{display:none}#matchIntro{padding:6px 24px}#matchIntro h2{font-size:clamp(21px,5vh,34px);margin-bottom:7px}#roster{grid-template-columns:repeat(10,minmax(0,1fr));width:min(96vw,1000px);gap:5px}.roster-card{border-width:2px;padding:4px 2px 5px;border-radius:9px}.roster-avatar{font-size:clamp(19px,7vh,37px);height:clamp(32px,13vh,58px)}.roster-card b{font-size:clamp(8px,1.4vw,12px)}.roster-card small{font-size:8px}#introSub{margin-top:8px;font-size:12px}}#threeView{position:fixed;inset:0;pointer-events:none;display:none;background:#8cc4e3}#game{position:relative;z-index:1}#hud{z-index:9}</style></head><body><canvas id="game"></canvas><div id="threeView"></div><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><div id="matchIntro" aria-live="polite"><h2 id="introTitle">10 LEGENDS ENTER</h2><div id="roster"></div><p id="introSub">SOLO SHOWDOWN</p></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
+@media (orientation:landscape) and (pointer:coarse){#hud{top:5px;left:14px;right:14px;font-size:13px}#stick{left:max(22px,env(safe-area-inset-left));bottom:15px;width:116px;height:116px}#knob{left:33px;top:33px}#fire{right:max(22px,env(safe-area-inset-right));bottom:16px;width:100px;height:100px}#super{right:135px;bottom:26px;width:70px;height:70px}#status{display:none}#matchIntro{padding:6px 24px}#matchIntro h2{font-size:clamp(21px,5vh,34px);margin-bottom:7px}#roster{grid-template-columns:repeat(10,minmax(0,1fr));width:min(96vw,1000px);gap:5px}.roster-card{border-width:2px;padding:4px 2px 5px;border-radius:9px}.roster-avatar{font-size:clamp(19px,7vh,37px);height:clamp(32px,13vh,58px)}.roster-card b{font-size:clamp(8px,1.4vw,12px)}.roster-card small{font-size:8px}#introSub{margin-top:8px;font-size:12px}}#threeView{position:fixed;inset:0;pointer-events:none;display:none;background:#8cc4e3}#game{position:relative;z-index:1}#hud{z-index:9}
+/* Crisp arcade presentation and responsive layouts */
+body{font-family:system-ui,-apple-system,"Arial Black",sans-serif;background:#181c44}
+#menu{background:radial-gradient(ellipse at 50% 70%,#6c4dd9 0%,#413aa8 42%,#151a56 100%)}
+#panel{background:radial-gradient(ellipse at 50% 50%,#ffffff0c,transparent 47%)}
+.lobby-main{position:relative}
+.fighter-stage{isolation:isolate}
+.fighter-stage:before{content:"";position:absolute;width:min(36vw,360px);height:65%;background:radial-gradient(ellipse,#fbcc7048 0%,#c758ec20 44%,transparent 72%);z-index:-1;filter:blur(3px)}
+.lobby-rail button{background:linear-gradient(175deg,#4c62c9,#253075 75%);border-color:#a4b7ff;box-shadow:0 5px #151a59,0 12px 20px #0d104366}
+.lobby-rail button:hover,.option-grid button:hover{filter:brightness(1.18)}
+.currency{background:#1a215d;border-color:#8191d8;box-shadow:0 3px #11194b}
+#start{animation:playGlow 2.5s ease-in-out infinite}
+@keyframes playGlow{50%{filter:brightness(1.1);box-shadow:0 7px #995b11,0 0 26px #ffcc3380}}
+.popup-card{max-height:90dvh;overflow:auto;background:linear-gradient(158deg,#4e3aa2,#25245f);border-color:#beaafa;box-shadow:0 14px #17123b,0 24px 45px #0504248c}
+.option-grid{max-height:58dvh;overflow:auto;grid-template-columns:repeat(2,minmax(0,1fr));padding:4px 2px 10px}
+.option-grid button{min-height:58px;font-size:clamp(12px,1.7vw,16px);line-height:1.25;background:linear-gradient(180deg,#616aca,#424da8);border:2px solid #909cf2;box-shadow:0 4px #25256d;overflow-wrap:anywhere}
+.option-grid button:disabled{opacity:.72;cursor:default}
+.option-grid button.selected{background:linear-gradient(180deg,#ffda64,#ffad34);color:#312154;border-color:#ffe89a}
+#hud{font-size:clamp(12px,1.5vw,20px);gap:8px}
+#hud>div{padding:7px 11px;border-radius:11px;border:2px solid #ffffff66;background:#171944c9;box-shadow:0 4px #0c1033a8;text-shadow:0 2px #10102f}
+#touch{display:none!important}
+body.phone-mode #touch{display:block!important}
+body.phone-mode #status{display:none!important}
+body:not(.phone-mode) #touch{display:none!important}
+@media(max-height:520px){#panel{gap:5px;padding:5px 14px}.lobby-main{min-height:170px;gap:8px}.lobby-rail{gap:5px}.lobby-rail button{padding:6px 7px}.fighter-art{width:clamp(110px,18vw,190px);height:clamp(125px,24vh,220px)}.fighter-name{font-size:22px}.fighter-sub{font-size:11px}.lobby-bottom{gap:6px}.lobby-footer{display:none}#trophyTrack{padding:4px 8px}.profile{padding:3px 8px}#start{padding:7px 24px}.mode-card{padding:5px 9px}}
+@media(max-width:520px) and (orientation:portrait){.lobby-main{grid-template-columns:70px minmax(120px,1fr) 70px}.lobby-rail button{font-size:9px;padding:8px 2px}.fighter-art{width:145px;height:170px}#panel{padding:8px}.lobby-top{gap:6px}.lobby-bottom{gap:5px}.mode-card{min-width:160px}#start{min-width:145px;padding:9px;font-size:19px}.option-grid{grid-template-columns:1fr 1fr}}
+
+</style></head><body><canvas id="game"></canvas><div id="threeView"></div><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><div id="matchIntro" aria-live="polite"><h2 id="introTitle">10 LEGENDS ENTER</h2><div id="roster"></div><p id="introSub">SOLO SHOWDOWN</p></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
 <div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff" id="profileNickname">ROOKIE LEGEND</div><button type="button" id="profileSignout">SWITCH PROFILE</button></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency">💎 0</span></div></div>
 <div class="lobby-main"><div class="lobby-rail"><button id="fightersBtn">🦸<div>FIGHTERS</div></button><button id="shopBtn">🛒<div>SHOP</div></button><button id="questsBtn">📜<div>QUESTS</div></button></div>
 <div class="fighter-stage"><div class="fighter-art" id="fighterArt" style="--fighter:#38b6ff;--fighter-dark:#236bc2"><canvas id="lobbyFighterCanvas" width="420" height="460" aria-label="Animated fighter preview"></canvas></div><div class="fighter-name" id="fighterName">BOLT</div><div class="fighter-sub" id="fighterSubtitle">⚡ STARTER FIGHTER · POWER 1</div></div>
@@ -45,21 +72,116 @@
 <div class="lobby-footer"><span>⚡ CLASH LEGENDS: ARENA · ORIGINAL PROTOTYPE</span><span>💻 WASD + Mouse · 📱 Touch controls</span></div>
 </div></div><div id="welcomeGate"><div id="welcomeCard"><h2>⚡ CLASH LEGENDS</h2><p>CREATE YOUR LOCAL PLAYER PROFILE</p><input id="welcomeName" maxlength="18" placeholder="Enter your player name" autocomplete="nickname"><p>CHOOSE HOW YOU PLAY</p><div class="deviceChoices"><button type="button" id="devicePhone">📱 PHONE</button><button type="button" id="deviceLaptop">💻 LAPTOP</button></div><div id="welcomeError"></div><button type="button" id="welcomeGo">ENTER ARENA ▶</button><p style="font-size:12px;font-weight:500">Your profile and progress are saved on this device only. This is not an online account.</p></div></div><div id="lobbyPopup"><div class="popup-card"><h2 id="popupTitle">CHOOSE</h2><div class="option-grid" id="popupOptions"></div><button class="popup-close" id="popupClose">CLOSE ✕</button></div></div>
 <script>
-/* Independent lobby navigation: works even if the game renderer fails. */
+/* Lobby navigation and persistent offline economy. Buttons remain functional if WebGL fails. */
 (()=>{'use strict';
-const popup=document.getElementById('lobbyPopup'),title=document.getElementById('popupTitle'),options=document.getElementById('popupOptions');
-const close=()=>{popup.style.display='none'};
-function screen(name,items){title.textContent=name;options.replaceChildren();for(const item of items){let b=document.createElement('button');b.type='button';b.textContent=item.label;b.addEventListener('click',item.action||(()=>{}));options.appendChild(b)}popup.style.display='flex'}
-const coins=()=>Number(localStorage.getItem('clashLegendsCoins')||0);
-const level=()=>Math.min(10,Math.max(1,Number(localStorage.getItem('clashBoltLevel')||1)));
-function upgrade(){let lv=level(),cost=lv*60;screen('⚡ BOLT UPGRADES',[{label:'POWER LEVEL '+lv+' / 10'},{label:'❤️ HEALTH '+(100+(lv-1)*20)},{label:'🎯 DAMAGE '+(25+(lv-1)*4)},{label:lv===10?'MAX LEVEL':'UPGRADE · '+cost+' COINS',action:()=>{if(lv>=10)return;if(coins()<cost){screen('NOT ENOUGH COINS',[{label:'NEED '+(cost-coins())+' MORE COINS'},{label:'BACK',action:upgrade}]);return}localStorage.setItem('clashLegendsCoins',coins()-cost);localStorage.setItem('clashBoltLevel',lv+1);const el=document.getElementById('lobbyCoins');if(el)el.textContent='🪙 '+coins();upgrade()}},{label:'CLOSE',action:close}])}
-function shop(){const today=new Date().toDateString(),claimed=localStorage.getItem('clashDailyGift')===today;screen('🛒 SHOP',[{label:'🪙 '+coins()+' COINS'},{label:'⚡ UPGRADE BOLT',action:upgrade},{label:claimed?'✓ DAILY GIFT CLAIMED':'🎁 FREE DAILY 50 COINS',action:()=>{if(localStorage.getItem('clashDailyGift')!==today){localStorage.setItem('clashDailyGift',today);localStorage.setItem('clashLegendsCoins',coins()+50);const el=document.getElementById('lobbyCoins');if(el)el.textContent='🪙 '+coins()}shop()}},{label:'CLOSE',action:close}])}
-function friends(){let names=[];try{names=JSON.parse(localStorage.getItem('clashLocalFriends')||'[]')}catch(e){}screen('👥 FRIENDS · LOCAL ONLY',[{label:'➕ ADD FRIEND NAME',action:()=>{let n=prompt('Friend nickname (saved only on this device):');if(!n||!n.trim())return;n=n.trim().slice(0,22);if(!names.includes(n))names.push(n);localStorage.setItem('clashLocalFriends',JSON.stringify(names.slice(0,30)));friends()}},...names.map(n=>({label:'👤 '+n+' · REMOVE',action:()=>{localStorage.setItem('clashLocalFriends',JSON.stringify(names.filter(v=>v!==n)));friends()}})),{label:'Online invites are not available yet'},{label:'CLOSE',action:close}])}
-const fighterNames=["BOLT","EMBER","MOSS","VIOLET","FROST","RICOCHET","NOVA","TERRA"],fighterColors=["#38b6ff","#ff9852","#8fe36a","#dc88fa","#7ce8ff","#ffd064","#ff7ab5","#c49a70"],fighterDarks=["#236bc2","#cf4839","#3d9b56","#7846bd","#2587a4","#ac6c28","#ad3c75","#765138"];
-function selectFighter(i){localStorage.setItem('clashLegendsFighter',String(i));const n=document.getElementById('fighterName'),sub=document.getElementById('fighterSubtitle'),art=document.getElementById('fighterArt');if(n)n.textContent=fighterNames[i];if(sub)sub.textContent='POWER '+Math.max(1,Number(localStorage.getItem(["clashBoltLevel","clashEmberLevel","clashMossLevel","clashVioletLevel","clashFrostLevel","clashRicochetLevel","clashNovaLevel","clashTerraLevel"][i])||1))+' · 🏆 '+Number(localStorage.getItem(["clashBoltTrophies","clashEmberTrophies","clashMossTrophies","clashVioletTrophies","clashFrostTrophies","clashRicochetTrophies","clashNovaTrophies","clashTerraTrophies"][i])||0);if(art){art.style.setProperty('--fighter',fighterColors[i]);art.style.setProperty('--fighter-dark',fighterDarks[i])}close()}
-function fighterMenu(){screen('🦸 CHOOSE FIGHTER',fighterNames.map((n,i)=>({label:(Number(localStorage.getItem('clashLegendsFighter')||0)===i?'✓ ':'')+n+' · 🏆 '+Number(localStorage.getItem(['clashBoltTrophies','clashEmberTrophies','clashMossTrophies','clashVioletTrophies'][i])||0),action:()=>selectFighter(i)})).concat([{label:'CLOSE',action:close}]))}
-const pages={fightersBtn:fighterMenu,shopBtn:shop,questsBtn:()=>{const m=Number(localStorage.getItem('clashLegendsMatches')||0),w=Number(localStorage.getItem('clashLegendsWins')||0);screen('📜 QUESTS',[{label:'PLAY 3 MATCHES: '+Math.min(m,3)+'/3'},{label:'WIN 1 MATCH: '+Math.min(w,1)+'/1'},{label:'CLOSE',action:close}])},modesBtn:()=>screen('🎮 MODES',[{label:'🌪️ SOLO SHOWDOWN · PLAYABLE',action:close},{label:'🤝 DUO · COMING SOON'},{label:'💀 KNOCKOUT · COMING SOON'},{label:'CLOSE',action:close}]),rankedBtn:()=>screen('🏆 RANKED',[{label:'COMING SOON'},{label:'CLOSE',action:close}]),friendsBtn:friends};
-document.addEventListener('click',e=>{const b=e.target.closest('button,#modeCard');if(!b)return;if(b.id==='popupClose'){close();return}const fn=pages[b.id==='modeCard'?'modesBtn':b.id];if(fn){e.preventDefault();e.stopImmediatePropagation();fn()}},true);
+const $=id=>document.getElementById(id),popup=$('lobbyPopup'),heading=$('popupTitle'),options=$('popupOptions');
+const names=['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'];
+const icons=['⚡','🔥','🌿','💜','❄️','🎯','🌟','🪨'];
+const colors=['#38b6ff','#ff9852','#8fe36a','#dc88fa','#7ce8ff','#ffd064','#ff7ab5','#c49a70'];
+const darks=['#236bc2','#cf4839','#3d9b56','#7846bd','#2587a4','#ac6c28','#ad3c75','#765138'];
+const key=(i,type)=>'clash'+names[i].charAt(0)+names[i].slice(1).toLowerCase()+type;
+const num=k=>Math.max(0,Number(localStorage.getItem(k)||0)||0);
+const selected=()=>Math.min(7,Math.max(0,Number(localStorage.getItem('clashLegendsFighter')||0)));
+const coins=()=>num('clashLegendsCoins');
+const close=()=>popup.style.display='none';
+function screen(title,items){heading.textContent=title;options.replaceChildren();items.forEach(({label,action,selected:active,disabled})=>{
+ const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=!!disabled;
+ if(active)b.classList.add('selected');
+ if(action)b.addEventListener('click',action);options.appendChild(b)
+});popup.style.display='flex'}
+function notify(msg,action){screen(msg,[{label:'OKAY',action:action||close}])}
+function refresh(){
+ if($('lobbyTrophies'))$('lobbyTrophies').textContent='🏆 '+num('clashLegendsTrophies');
+ if($('lobbyCoins'))$('lobbyCoins').textContent='🪙 '+coins();
+ const i=selected(),lv=Math.max(1,num(key(i,'Level'))),t=num(key(i,'Trophies'));
+ if($('fighterName'))$('fighterName').textContent=names[i];
+ if($('fighterSubtitle'))$('fighterSubtitle').textContent=icons[i]+' POWER '+lv+' · 🏆 '+t+' TROPHIES';
+ if($('fighterArt')){$('fighterArt').style.setProperty('--fighter',colors[i]);$('fighterArt').style.setProperty('--fighter-dark',darks[i])}
+ if(window.clashRefreshRoad)window.clashRefreshRoad();
+}
+function choose(i){localStorage.setItem('clashLegendsFighter',String(i));refresh();close()}
+function fighters(){screen('🦸 CHOOSE YOUR LEGEND',names.map((n,i)=>({label:icons[i]+' '+n+' · LV '+Math.max(1,num(key(i,'Level')))+' · 🏆 '+num(key(i,'Trophies')),selected:selected()===i,action:()=>choose(i)})).concat([{label:'⚙️ UPGRADE SELECTED',action:upgrade}]))}
+function upgrade(){
+ const i=selected(),lv=Math.min(10,Math.max(1,num(key(i,'Level')))),cost=60*lv;
+ screen(icons[i]+' '+names[i]+' · POWER '+lv,[
+  {label:'❤️ HEALTH '+(100+(lv-1)*20),disabled:true},
+  {label:'🎯 DAMAGE BONUS +'+((lv-1)*16)+'%',disabled:true},
+  {label:'🪙 YOUR COINS '+coins(),disabled:true},
+  {label:lv===10?'⭐ MAX POWER':'⬆ UPGRADE · '+cost+' COINS',disabled:lv===10,selected:lv<10,action:()=>{
+   if(coins()<cost){notify('🪙 NEED '+(cost-coins())+' MORE COINS',upgrade);return}
+   localStorage.setItem('clashLegendsCoins',coins()-cost);localStorage.setItem(key(i,'Level'),lv+1);refresh();upgrade()
+  }},
+  {label:'🦸 CHANGE LEGEND',action:fighters}
+ ])
+}
+function today(){const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function shop(){const claimed=localStorage.getItem('clashDailyGift')===today();
+ screen('🛒 LEGENDS SHOP',[
+  {label:'🪙 WALLET '+coins(),disabled:true},
+  {label:claimed?'🎁 DAILY GIFT CLAIMED':'🎁 FREE DAILY · +50 🪙',disabled:claimed,action:()=>{
+   if(localStorage.getItem('clashDailyGift')===today())return;
+   localStorage.setItem('clashDailyGift',today());localStorage.setItem('clashLegendsCoins',coins()+50);refresh();shop()
+  }},
+  {label:'⬆ UPGRADE '+names[selected()],action:upgrade},
+  {label:'🦸 BRAWLER COLLECTION',action:fighters}
+ ])}
+const questDefs=[
+ {name:'PLAY 3 MATCHES',key:'Matches',target:3,reward:110},
+ {name:'WIN A SHOWDOWN',key:'Wins',target:1,reward:150},
+ {name:'DEFEAT 8 RIVALS',key:'Kills',target:8,reward:120}
+];
+function quests(){
+ const day=today();
+ screen('📜 DAILY QUESTS · '+day,questDefs.map((q,i)=>{
+  const value=localStorage.getItem('clashDailyStatsDate')===day?num('clashDaily'+q.key):0;
+  const done=localStorage.getItem('clashQuestClaim_'+i)===day;
+  return {label:(done?'✓ ':'')+q.name+' · '+Math.min(value,q.target)+'/'+q.target+(done?' · CLAIMED':value>=q.target?' · CLAIM +'+q.reward+' 🪙':' · +'+q.reward+' 🪙'),disabled:done||value<q.target,selected:value>=q.target&&!done,action:()=>{
+   if(localStorage.getItem('clashQuestClaim_'+i)===day)return;
+   if(localStorage.getItem('clashDailyStatsDate')!==day||num('clashDaily'+q.key)<q.target)return;
+   localStorage.setItem('clashQuestClaim_'+i,day);localStorage.setItem('clashLegendsCoins',coins()+q.reward);refresh();quests()
+  }}
+ }))}
+function modeName(){return localStorage.getItem('clashGameMode')||'showdown'}
+const modes=[
+ {id:'showdown',name:'🌪️ SOLO SHOWDOWN',desc:'10 legends · last one standing'},
+ {id:'rush',name:'⚡ STORM RUSH',desc:'10 legends · storm closes faster'},
+ {id:'training',name:'🎯 TRAINING ARENA',desc:'Practice with bots · no trophies'}
+];
+function modeSelect(id){localStorage.setItem('clashGameMode',id);updateMode();close()}
+function updateMode(){const m=modes.find(v=>v.id===modeName())||modes[0];if($('modeIcon'))$('modeIcon').textContent=m.name.split(' ')[0];if($('modeTitle'))$('modeTitle').textContent=m.name.slice(3);if($('modeDesc'))$('modeDesc').textContent=m.desc}
+function modeMenu(){screen('🎮 SELECT GAME MODE',modes.map(m=>({label:m.name+' · '+m.desc,selected:modeName()===m.id,action:()=>modeSelect(m.id)})))}
+function ranked(){
+ const total=num('clashLegendsTrophies'),bands=['BRONZE','SILVER','GOLD','DIAMOND','MYTHIC','LEGENDARY'];
+ const division=Math.min(5,Math.floor(total/350));
+ screen('🏆 TROPHY LEAGUE',[
+  {label:'🏅 '+bands[division]+' · '+total+' TROPHIES',disabled:true},
+  {label:'📈 NEXT LEAGUE: '+(division===5?'MAX':(division+1)*350+' TROPHIES'),disabled:true},
+  {label:'🤖 MATCHES ARE AGAINST BOTS, NOT ONLINE RANKED',disabled:true},
+  {label:'🌪️ PLAY SOLO SHOWDOWN',action:()=>modeSelect('showdown')}
+ ])}
+function readFriends(){try{const x=JSON.parse(localStorage.getItem('clashLocalFriends')||'[]');return Array.isArray(x)?x.filter(v=>typeof v==='string').slice(0,25):[]}catch(e){return[]}}
+function friends(){
+ const list=readFriends();screen('👥 FRIENDS · THIS DEVICE ONLY',[
+ {label:'➕ SAVE FRIEND NICKNAME',action:()=>{
+  const n=prompt('Friend nickname (stored on this device only, no online invitation):');
+  if(n===null)return;const clean=n.trim().slice(0,18);
+  if(!clean)return notify('ENTER A NICKNAME',friends);
+  if(!list.some(v=>v.toLowerCase()===clean.toLowerCase()))list.push(clean);
+  localStorage.setItem('clashLocalFriends',JSON.stringify(list.slice(0,25)));friends()
+ }},
+ ...list.map(n=>({label:'👤 '+n+' · REMOVE',action:()=>{localStorage.setItem('clashLocalFriends',JSON.stringify(list.filter(v=>v!==n)));friends()}})),
+ {label:'ONLINE FRIENDS & INVITES ARE NOT AVAILABLE',disabled:true}
+ ])}
+const actions={fightersBtn:fighters,shopBtn:shop,questsBtn:quests,modesBtn:modeMenu,rankedBtn:ranked,friendsBtn:friends};
+document.addEventListener('click',e=>{
+ const b=e.target.closest('button,#modeCard');if(!b)return;
+ if(b.id==='popupClose'){close();return}
+ const fn=actions[b.id==='modeCard'?'modesBtn':b.id];
+ if(fn){e.preventDefault();e.stopImmediatePropagation();fn()}
+},true);
+popup.addEventListener('click',e=>{if(e.target===popup)close()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&popup.style.display==='flex')close()});
+updateMode();refresh();window.clashLobbyRefresh=refresh;
 })();
 </script><script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js"></script><script>
 (()=>{'use strict';
