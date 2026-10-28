@@ -570,7 +570,7 @@ fire.addEventListener('pointermove',fireMove);
 function fireEnd(e){if(e.pointerId!==fireId)return;e.preventDefault();if(fireShots===0)fireOne();fireId=null;touchFire=false;fireDragged=false;fire.style.removeProperty('--aim-x');fire.style.removeProperty('--aim-y')}
 fire.addEventListener('pointerup',fireEnd);fire.addEventListener('pointercancel',e=>{if(e.pointerId!==fireId)return;fireId=null;touchFire=false;fire.style.removeProperty('--aim-x');fire.style.removeProperty('--aim-y')});
 document.querySelector('#super').addEventListener('pointerdown',e=>{e.preventDefault();superAttack()});
-if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).has('e2e'))window.__clashTest={forceWin:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';bots=[];hero.hp=Math.max(1,hero.hp)},forceLose:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';hero.hp=0},snapshot:()=>({playing,introStage,ammo,selectedFighter,alive:bots.length,heroHP:hero&&hero.hp,graphics:!!gfx3,mode:localStorage.getItem('clashGameMode')||'showdown'})};
+if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).has('e2e'))window.__clashTest={skipIntro:()=>{introStage=0;introPanel.style.display='none'},forceWin:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';bots=[];hero.hp=Math.max(1,hero.hp)},forceLose:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';hero.hp=0},snapshot:()=>({playing,introStage,ammo,selectedFighter,alive:bots.length,heroHP:hero&&hero.hp,graphics:!!gfx3,mode:localStorage.getItem('clashGameMode')||'showdown'})};
 })();
 </script>
 <script>
