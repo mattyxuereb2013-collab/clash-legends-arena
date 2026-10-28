@@ -290,7 +290,7 @@ function friends(){
   localStorage.setItem('clashLocalFriends',JSON.stringify(list.slice(0,25)));friends()
  }},
  ...list.map(n=>({label:'👤 '+n+' · REMOVE',action:()=>{localStorage.setItem('clashLocalFriends',JSON.stringify(list.filter(v=>v!==n)));friends()}})),
- {label:'ONLINE FRIENDS & INVITES ARE NOT AVAILABLE',disabled:true}
+ {label:'🌐 ONLINE FRIEND REQUESTS',action:()=>window.clashOnlineFriends?window.clashOnlineFriends():notify('ONLINE SERVICE UNAVAILABLE',friends)}
  ])}
 const actions={fightersBtn:fighters,shopBtn:shop,questsBtn:quests,modesBtn:modeMenu,rankedBtn:ranked,friendsBtn:friends};
 document.addEventListener('click',e=>{
@@ -869,5 +869,107 @@ try{
  stage.classList.add('webgl-loaded');requestAnimationFrame(frame);
  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();stage.classList.remove('webgl-loaded')},{once:true});
 }catch(e){console.warn('3D lobby preview unavailable, using 2D fallback',e);stage.classList.remove('webgl-loaded');if(renderer)renderer.dispose()}
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.3/dist/umd/supabase.min.js"></script>
+<script>
+/* Optional real friend requests, isolated from local game progress. No secret credentials in this client. */
+(()=>{'use strict';
+const popup=document.getElementById('lobbyPopup'),heading=document.getElementById('popupTitle'),options=document.getElementById('popupOptions');
+const url='https://pziwwizieiyjpvtlkvjs.supabase.co',publishableKey='sb_publishable_Dn41VgZfEBr-wsg8EBICnQ_CseQ8f_G';
+let api=null,user=null;
+try{if(window.supabase?.createClient)api=window.supabase.createClient(url,publishableKey,{auth:{autoRefreshToken:true,persistSession:true,detectSessionInUrl:false}})}catch(e){console.warn('Friends backend unavailable:',e)}
+function view(title,items){
+ heading.textContent=title;options.replaceChildren();popup.style.display='flex';
+ items.forEach(({label,action,disabled})=>{const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=!!disabled;if(action)b.addEventListener('click',action);options.appendChild(b)})
+}
+function notice(msg,back=online){view(msg,[{label:'OK',action:back}])}
+function field(type,placeholder,maxlength){
+ const el=document.createElement('input');el.type=type;el.placeholder=placeholder;el.autocomplete=type==='password'?'current-password':type==='email'?'email':'nickname';el.maxLength=maxlength;el.style.cssText='grid-column:1/-1;min-height:46px;border:2px solid #93a7ff;border-radius:12px;background:#141d57;color:#fff;padding:12px;font-size:16px;';options.appendChild(el);return el
+}
+async function online(){
+ if(!api){view('🌐 FRIENDS SERVICE UNAVAILABLE',[{label:'LOCAL FRIENDS STILL WORK',disabled:true}]);return}
+ const response=await api.auth.getUser();user=response.data?.user||null;
+ if(!user){loginMenu();return}
+ const r=await api.from('clash_profiles').select('user_id,handle').eq('user_id',user.id).maybeSingle();
+ if(r.error){notice('FRIENDS CONNECTION ERROR: '+r.error.message,loginMenu);return}
+ if(!r.data){profileForm();return}
+ friendsList(r.data.handle)
+}
+function loginMenu(){
+ view('🌐 ONLINE FRIENDS · OPTIONAL',[
+  {label:'🔐 SIGN IN',action:()=>accountForm(false)},
+  {label:'✨ CREATE ACCOUNT',action:()=>accountForm(true)},
+  {label:'EMAIL IS PRIVATE · USERNAMES ARE PUBLIC',disabled:true},
+  {label:'MATCH TROPHIES STILL SAVE ON THIS DEVICE',disabled:true}
+ ])
+}
+function accountForm(signup){
+ heading.textContent=signup?'✨ CREATE ONLINE ACCOUNT':'🔐 ONLINE SIGN IN';
+ options.replaceChildren();popup.style.display='flex';
+ const email=field('email','Email address',160),pass=field('password','Password (6+ characters)',100);
+ const submit=document.createElement('button');submit.type='button';submit.textContent=signup?'CREATE ACCOUNT':'SIGN IN';options.appendChild(submit);
+ const back=document.createElement('button');back.type='button';back.textContent='◀ BACK';back.onclick=loginMenu;options.appendChild(back);
+ submit.onclick=async()=>{
+  const e=email.value.trim(),p=pass.value;if(!e.includes('@')||p.length<6){notice('ENTER A VALID EMAIL AND 6+ CHARACTER PASSWORD',()=>accountForm(signup));return}
+  submit.disabled=true;submit.textContent='CONNECTING…';
+  try{const res=signup?await api.auth.signUp({email:e,password:p}):await api.auth.signInWithPassword({email:e,password:p});
+   if(res.error){notice('ACCOUNT ERROR: '+res.error.message,()=>accountForm(signup));return}
+   if(signup&&!res.data.session){notice('CHECK YOUR EMAIL TO CONFIRM YOUR ACCOUNT',loginMenu);return}
+   online()
+  }catch(err){notice('COULD NOT CONNECT: '+String(err.message||err),loginMenu)}
+ }
+}
+function profileForm(){
+ heading.textContent='🎮 CHOOSE ONLINE FRIEND CODE';options.replaceChildren();popup.style.display='flex';
+ const handle=field('text','3–18 letters, digits or underscores',18);
+ handle.value=(localStorage.getItem('clashPlayerName')||'Legend').replace(/[^A-Za-z0-9_]/g,'').slice(0,18)||'Legend';
+ const save=document.createElement('button');save.textContent='SAVE FRIEND CODE';save.onclick=async()=>{
+  const name=handle.value.trim();if(!/^[A-Za-z0-9_]{3,18}$/.test(name)){notice('USE 3–18 LETTERS, NUMBERS OR UNDERSCORES',profileForm);return}
+  const res=await api.from('clash_profiles').insert({user_id:user.id,handle:name});
+  if(res.error){notice('FRIEND CODE UNAVAILABLE: '+res.error.message,profileForm);return}online()
+ };options.appendChild(save)
+}
+async function friendsList(handle){
+ if(!user)return online();
+ const q=await api.from('clash_friend_requests').select('id,requester,recipient,status').limit(100);
+ if(q.error){notice('COULD NOT LOAD FRIENDS: '+q.error.message);return}
+ const rows=q.data||[],ids=[...new Set(rows.flatMap(r=>[r.requester,r.recipient]))];
+ const profiles=ids.length?await api.from('clash_profiles').select('user_id,handle').in('user_id',ids):{data:[]};
+ const names=new Map((profiles.data||[]).map(p=>[p.user_id,p.handle]));
+ const other=r=>names.get(r.requester===user.id?r.recipient:r.requester)||'Player';
+ const friends=rows.filter(r=>r.status==='accepted');
+ const incoming=rows.filter(r=>r.status==='pending'&&r.recipient===user.id);
+ const outgoing=rows.filter(r=>r.status==='pending'&&r.requester===user.id);
+ view('👥 ONLINE FRIENDS · '+handle,[
+  {label:'➕ SEND FRIEND REQUEST',action:sendRequest},
+  {label:'🔄 REFRESH FRIENDS',action:()=>friendsList(handle)},
+  ...friends.map(r=>({label:'✅ FRIEND · '+other(r),disabled:true})),
+  ...incoming.flatMap(r=>[
+   {label:'✅ ACCEPT '+other(r),action:()=>decide(r.id,'accepted')},
+   {label:'✕ DECLINE '+other(r),action:()=>decide(r.id,'declined')}
+  ]),
+  ...outgoing.map(r=>({label:'⏳ REQUESTED '+other(r),disabled:true})),
+  ...(!rows.length?[{label:'NO FRIENDS YET · SHARE YOUR CODE',disabled:true}]:[]),
+  {label:'🔒 SIGN OUT OF ONLINE FRIENDS',action:async()=>{await api.auth.signOut();user=null;loginMenu()}}
+ ])
+}
+async function sendRequest(){
+ const handle=prompt('Enter your friend’s online code (3–18 characters):');
+ if(handle===null)return online();
+ if(!/^[A-Za-z0-9_]{3,18}$/.test(handle.trim())){notice('INVALID FRIEND CODE');return}
+ const p=await api.from('clash_profiles').select('user_id,handle').ilike('handle',handle.trim()).maybeSingle();
+ if(p.error||!p.data){notice('FRIEND CODE NOT FOUND');return}
+ if(p.data.user_id===user.id){notice('YOU CANNOT ADD YOURSELF');return}
+ const r=await api.from('clash_friend_requests').insert({requester:user.id,recipient:p.data.user_id,status:'pending'});
+ if(r.error){notice('REQUEST NOT SENT: '+r.error.message);return}
+ notice('FRIEND REQUEST SENT TO '+p.data.handle)
+}
+async function decide(id,status){
+ const r=await api.from('clash_friend_requests').update({status}).eq('id',id);
+ if(r.error){notice('FRIEND REQUEST FAILED: '+r.error.message);return}
+ online()
+}
+window.clashOnlineFriends=online;
 })();
 </script></body></html>
