@@ -78,6 +78,15 @@ body:not(.phone-mode) #touch{display:none!important}
 .result-rewards>div{background:#202665;border:2px solid #b1acff;border-radius:11px;padding:8px 15px}
 .result-card #again{padding:12px 26px;font-size:clamp(16px,2.5vw,26px)}
 @media(max-height:550px){.result-screen{min-height:0}.result-card{padding:12px}.result-place{font-size:52px}.result-card h1{font-size:24px}.result-stats{margin:6px auto}.result-stats>div{padding:5px}.result-rewards{margin:8px}}
+
+@media(orientation:landscape) and (max-height:500px) {
+ body.phone-mode #stick{width:104px;height:104px;left:max(12px,env(safe-area-inset-left));bottom:12px;border-width:4px}
+ body.phone-mode #knob{left:28px;top:28px}
+ body.phone-mode #fire{width:89px;height:89px;right:max(14px,env(safe-area-inset-right));bottom:13px;border-width:4px}
+ body.phone-mode #super{width:59px;height:59px;right:111px;bottom:25px;font-size:16px}
+ body.phone-mode #hud{font-size:11px}
+ body.phone-mode #hud>div{padding:4px 7px}
+}
 </style></head><body><canvas id="game"></canvas><div id="threeView"></div><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><div id="matchIntro" aria-live="polite"><h2 id="introTitle">10 LEGENDS ENTER</h2><div id="roster"></div><p id="introSub">SOLO SHOWDOWN</p></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
 <div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff" id="profileNickname">ROOKIE LEGEND</div><button type="button" id="profileSignout">SWITCH PROFILE</button></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency">💎 0</span></div></div>
 <div class="lobby-main"><div class="lobby-rail"><button id="fightersBtn">🦸<div>FIGHTERS</div></button><button id="shopBtn">🛒<div>SHOP</div></button><button id="questsBtn">📜<div>QUESTS</div></button></div>
@@ -295,13 +304,13 @@ function init3(){
   r.setPixelRatio(Math.min(window.devicePixelRatio||1,1.5));
   r.shadowMap.enabled=true;r.shadowMap.type=T.PCFSoftShadowMap;
   if(T.SRGBColorSpace)r.outputColorSpace=T.SRGBColorSpace;
-  if(T.ACESFilmicToneMapping){r.toneMapping=T.ACESFilmicToneMapping;r.toneMappingExposure=1.18}
+  if(T.ACESFilmicToneMapping){r.toneMapping=T.ACESFilmicToneMapping;r.toneMappingExposure=.88}
   r.setSize(innerWidth,innerHeight);
   const view=document.getElementById('threeView');view.replaceChildren(r.domElement);view.style.display='block';
   const scene=new T.Scene();scene.background=new T.Color(0x4d4b8b);
   scene.fog=new T.Fog(0x635c84,1300,2900);
-  scene.add(new T.HemisphereLight(0xe9f0ff,0x846038,1.38));
-  const sun=new T.DirectionalLight(0xffdeb2,2.35);
+  scene.add(new T.HemisphereLight(0xe9f0ff,0x63402c,.88));
+  const sun=new T.DirectionalLight(0xffdbab,1.65);
   sun.position.set(-380,850,550);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);
   sun.shadow.camera.left=-950;sun.shadow.camera.right=950;sun.shadow.camera.top=950;sun.shadow.camera.bottom=-950;
   sun.shadow.bias=-0.00025;sun.shadow.normalBias=.03;sun.shadow.radius=3;scene.add(sun);
@@ -313,17 +322,17 @@ function init3(){
   const bx=geo('unitBox',()=>new T.BoxGeometry(1,1,1)),sphere=geo('unitSphere',()=>new T.SphereGeometry(1,14,10)),round=geo('unitRound',()=>new T.DodecahedronGeometry(1,1));
   function floorTexture(){
    const c=document.createElement('canvas');c.width=c.height=512;const cx=c.getContext('2d');
-   cx.fillStyle='#c99a61';cx.fillRect(0,0,512,512);
+   cx.fillStyle='#b77e50';cx.fillRect(0,0,512,512);
    let seed=6347;const rng=()=>{seed=(seed*1664525+1013904223)>>>0;return seed/4294967296};
-   for(let i=0;i<2900;i++){const x=rng()*512,y=rng()*512,z=1+rng()*8;cx.fillStyle=['#d8ac73','#ba8752','#e6b780','#aa774d','#edc48b'][Math.floor(rng()*5)];cx.globalAlpha=.08+rng()*.23;cx.beginPath();cx.ellipse(x,y,z*2,z,0,0,7);cx.fill()}
-   cx.globalAlpha=.21;cx.lineWidth=3;cx.strokeStyle='#f9d9a1';
+   for(let i=0;i<2900;i++){const x=rng()*512,y=rng()*512,z=1+rng()*8;cx.fillStyle=['#c5945f','#9d623e','#d4a36a','#985d40','#d1a06d'][Math.floor(rng()*5)];cx.globalAlpha=.08+rng()*.23;cx.beginPath();cx.ellipse(x,y,z*2,z,0,0,7);cx.fill()}
+   cx.globalAlpha=.22;cx.lineWidth=3;cx.strokeStyle='#ffcb83';
    for(let i=0;i<22;i++){cx.beginPath();const y=rng()*512;cx.moveTo(0,y);cx.bezierCurveTo(120,y+20,260,y-15,512,y+15);cx.stroke()}
-   cx.globalAlpha=1;
+   cx.globalAlpha=.25;cx.strokeStyle='#754c37';cx.lineWidth=2;for(let xx=0;xx<512;xx+=80)for(let yy=0;yy<512;yy+=80){cx.strokeRect(xx+6,yy+4,66,66)}cx.globalAlpha=1;
    const t=new T.CanvasTexture(c);t.wrapS=t.wrapT=T.RepeatWrapping;t.repeat.set(worldW/512,worldH/512);t.colorSpace=T.SRGBColorSpace; t.anisotropy=Math.min(4,r.capabilities.getMaxAnisotropy());return t;
   }
   const floor=new T.Mesh(new T.PlaneGeometry(worldW,worldH),new T.MeshStandardMaterial({map:floorTexture(),roughness:1}));
   floor.rotation.x=-Math.PI/2;floor.position.set(worldW/2,-3,worldH/2);floor.receiveShadow=true;scene.add(floor);
-  const base=new T.Mesh(new T.BoxGeometry(worldW+70,32,worldH+70),mat(0x77503e));base.position.set(worldW/2,-23,worldH/2);base.receiveShadow=true;scene.add(base);
+  const base=new T.Mesh(new T.BoxGeometry(worldW+70,32,worldH+70),mat(0x674239));base.position.set(worldW/2,-23,worldH/2);base.receiveShadow=true;scene.add(base);
   const ray=new T.Raycaster(),aimPlane=new T.Plane(new T.Vector3(0,1,0),0),mouseHit=new T.Vector3();
   const aimGeo=new T.BufferGeometry();const verts=[0,0,0];for(let i=0;i<=20;i++){let a=-.11+i*.22/20;verts.push(Math.cos(a)*465,0,Math.sin(a)*465)}
   const tris=[];for(let i=1;i<=20;i++)tris.push(0,i,i+1);
@@ -338,7 +347,7 @@ function init3(){
 }
 function resize3(){
  if(!gfx3)return;
- const g=gfx3,a=Math.max(.55,innerWidth/Math.max(1,innerHeight)),span=innerWidth>innerHeight?585:720;
+ const g=gfx3,a=Math.max(.55,innerWidth/Math.max(1,innerHeight)),span=innerHeight<500?475:innerWidth>innerHeight?655:670;
  g.camera.left=-span*a/2;g.camera.right=span*a/2;g.camera.top=span/2;g.camera.bottom=-span/2;g.camera.updateProjectionMatrix();
  g.r.setSize(innerWidth,innerHeight);
 }
@@ -359,20 +368,20 @@ function build3(){
  // Layered, bevel-like masonry with capstones, brick seams, and warm rim highlights.
  for(const q of walls){
   box3(g.fixed,q.x+4,q.y+8,q.w,q.h,65,0x6a4639);
-  box3(g.fixed,q.x,q.y,q.w,q.h,68,0xb46b47);
-  box3(g.fixed,q.x+3,q.y+3,q.w-6,q.h-6,12,0xda9a63).position.y=65;
-  const cap=box3(g.fixed,q.x-4,q.y-4,q.w+8,q.h+8,10,0xefbd80);cap.position.y=74;
-  for(let i=1;i<Math.floor(q.w/40);i++){const seam=box3(g.fixed,q.x+i*40,q.y+3,3,q.h-6,2,0x8e533f);seam.position.y=70}
+  box3(g.fixed,q.x,q.y,q.w,q.h,68,0x9f563d);
+  box3(g.fixed,q.x+3,q.y+3,q.w-6,q.h-6,12,0xc48250).position.y=65;
+  const cap=box3(g.fixed,q.x-4,q.y-4,q.w+8,q.h+8,10,0xdea46b);cap.position.y=74;
+  for(let i=1;i<Math.floor(q.w/40);i++){const seam=box3(g.fixed,q.x+i*40,q.y+3,3,q.h-6,2,0x824a39);seam.position.y=70}
  }
  // Dense dark foliage under bright tufted crowns; no hundreds of per-frame allocations.
- const bushColors=[0x27673f,0x30834b,0x45a958,0x57bc62,0x84d96e];
+ const bushColors=[0x1d5a32,0x2a7139,0x378c44,0x45a252,0x5cae5c];
  for(const b of bushes){
-  mesh3(g.fixed,g.bx,g.mat(0x235639),b.x+b.w/2,9,b.y+b.h/2,b.w,17,b.h);
+  mesh3(g.fixed,g.bx,g.mat(0x17452a),b.x+b.w/2,9,b.y+b.h/2,b.w,17,b.h);
   for(let z=b.y+12;z<b.y+b.h;z+=29)for(let xx=b.x+12;xx<b.x+b.w;xx+=28){
    const hash=(Math.sin(xx*12.9898+z*78.233)*43758.5453)%1;
    const x=xx+hash*5,zz=z+Math.cos(xx+z)*4,idx=Math.abs(Math.floor(hash*17))%5;
    mesh3(g.fixed,g.round,g.mat(bushColors[idx]),x,21,zz,19,16,20);
-   if((xx+z)%3<1.5)mesh3(g.fixed,g.round,g.mat(0x8be078),x-5,31,zz-7,8,5,9);
+   if((xx+z)%3<1.5)mesh3(g.fixed,g.round,g.mat(0x6ac66b),x-5,31,zz-7,8,5,9);
   }
  }
  // Reusable small rocks and cacti create landmarks beyond plain walls.
@@ -489,7 +498,7 @@ function render3(){
  const parts=[[worldW/2,sm/2,worldW,sm],[worldW/2,worldH-sm/2,worldW,sm],[sm/2,worldH/2,sm,worldH-2*sm],[worldW-sm/2,worldH/2,sm,worldH-2*sm]];
  g.storms.forEach((m,i)=>{let p=parts[i];m.visible=playing&&sm>0;m.position.set(p[0],8,p[1]);m.scale.set(Math.max(.01,p[2]),Math.max(.01,p[3]),1)});
  const targetX=hero.x,targetZ=hero.y;
- g.camera.position.set(targetX,810,targetZ+520);g.camera.lookAt(targetX,10,targetZ);
+ g.camera.position.set(targetX,780,targetZ+530);g.camera.lookAt(targetX,10,targetZ);
  g.r.render(g.scene,g.camera);
  return true;
 }
