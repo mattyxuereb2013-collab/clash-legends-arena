@@ -1058,7 +1058,17 @@ g.restore();g.restore();
 requestAnimationFrame(lobbyFighter)}
 requestAnimationFrame(lobbyFighter);
 
-const road=[{t:25,c:60},{t:75,c:120},{t:150,c:200},{t:300,c:350},{t:500,c:500},{t:800,c:750},{t:1200,c:1000},{t:2000,c:1300},{t:3000,c:1800}];
+const road=[
+ {t:25,type:'fighter',i:1},{t:75,type:'drop',amount:2},
+ {t:150,type:'fighter',i:2},{t:225,type:'coins',amount:220},
+ {t:300,type:'fighter',i:3},{t:400,type:'box',amount:1},
+ {t:500,type:'fighter',i:4},{t:650,type:'points',amount:110},
+ {t:800,type:'fighter',i:5},{t:1000,type:'drop',amount:3},
+ {t:1200,type:'fighter',i:6},{t:1500,type:'box',amount:2},
+ {t:2000,type:'fighter',i:7},{t:2400,type:'coins',amount:850},
+ {t:3000,type:'box',amount:3},{t:4000,type:'drop',amount:5},
+ {t:5500,type:'coins',amount:1500}
+];
 const popup=document.querySelector('#lobbyPopup'),options=document.querySelector('#popupOptions'),heading=document.querySelector('#popupTitle');
 function num(k){return Math.max(0,Number(localStorage.getItem(k)||0))}
 function claimIndex(){return Math.min(road.length,num('clashRoadClaimed'))}
@@ -1066,22 +1076,35 @@ function renderRoad(){
  const idx=claimIndex(),total=num('clashLegendsTrophies'),prev=idx?road[idx-1].t:0,next=road[idx];
  document.querySelector('#trackInfo').textContent=next?total+' / '+next.t:'ROAD COMPLETE';
  document.querySelector('#trackFill').style.width=(next?Math.max(0,Math.min(100,(total-prev)/(next.t-prev)*100)):100)+'%';
- document.querySelector('#trackButton').textContent=next&&total>=next.t?'🎁 CLAIM':'REWARDS'
+ document.querySelector('#trackButton').textContent=next&&total>=next.t?'🎁 CLAIM':'REWARDS';
 }
 function roadPopup(){
- const idx=claimIndex(),total=num('clashLegendsTrophies'),next=road[idx];
- heading.textContent='🏆 TROPHY ROAD';options.replaceChildren();
- const entries=next?[
- ['🏆 YOUR TROPHIES: '+total+' / '+next.t],
- ['🎁 NEXT REWARD: '+next.c+' COINS'],
- [total>=next.t?'CLAIM '+next.c+' COINS':'🔒 '+(next.t-total)+' MORE TROPHIES',()=> {
-  if(num('clashLegendsTrophies')<next.t||claimIndex()!==idx)return;
-  localStorage.setItem('clashRoadClaimed',idx+1);
-  localStorage.setItem('clashLegendsCoins',num('clashLegendsCoins')+next.c);
-  renderRoad();window.clashLobbyRefresh?.();roadPopup()
- }]
- ]:[['⭐ ALL TROPHY ROAD REWARDS CLAIMED']];
- for(const [label,action] of entries){const b=document.createElement('button');b.textContent=label;if(action)b.onclick=action;else b.disabled=true;options.appendChild(b)}
+ const idx=claimIndex(),total=num('clashLegendsTrophies');
+ heading.textContent='🏆 TROPHY ROAD · '+total+' 🏆';options.replaceChildren();
+ const current=road[idx];
+ const labelFor=v=>v.type==='fighter'?'🦸 '+['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'][v.i]:
+ v.type==='drop'?'✨ '+v.amount+' CLASH DROPS':v.type==='box'?'📦 '+v.amount+' ARENA BOXES':
+ v.type==='points'?'⚡ '+v.amount+' POWER POINTS':'🪙 '+v.amount+' COINS';
+ for(let j=Math.max(0,idx-2);j<Math.min(road.length,idx+6);j++){
+  const item=road[j],claimed=j<idx,ready=j===idx&&total>=item.t;
+  const b=document.createElement('button');b.type='button';
+  b.textContent=(claimed?'✓ ':ready?'🎁 ':'🔒 ')+item.t+' 🏆 · '+labelFor(item)+(ready?' · CLAIM':'');
+  b.disabled=!ready;
+  if(ready)b.onclick=()=>{
+   if(claimIndex()!==j||num('clashLegendsTrophies')<item.t)return;
+   // Advance the claim marker before paying, preventing repeated taps from duplicating rewards.
+   localStorage.setItem('clashRoadClaimed',String(j+1));
+   if(item.type==='fighter')localStorage.setItem('clashOwned'+['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'][item.i],'yes');
+   else if(item.type==='coins')localStorage.setItem('clashLegendsCoins',num('clashLegendsCoins')+item.amount);
+   else if(item.type==='points'){const i=Math.max(0,Math.min(7,num('clashLegendsFighter')));const k='clash'+['Bolt','Ember','Moss','Violet','Frost','Ricochet','Nova','Terra'][i]+'Points';localStorage.setItem(k,num(k)+item.amount)}
+   else if(item.type==='drop')localStorage.setItem('clashDrops',num('clashDrops')+item.amount);
+   else if(item.type==='box')localStorage.setItem('clashBoxes',num('clashBoxes')+item.amount);
+   renderRoad();window.clashLobbyRefresh?.();roadPopup()
+  };
+  options.appendChild(b)
+ }
+ if(!current){const b=document.createElement('button');b.textContent='🏆 TROPHY ROAD COMPLETE';b.disabled=true;options.appendChild(b)}
+ const b=document.createElement('button');b.textContent='🎁 OPEN DROPS AND BOXES';b.onclick=()=>document.querySelector('#shopBtn').click();options.appendChild(b);
  popup.style.display='flex'
 }
 document.querySelector('#trackButton').onclick=roadPopup;
