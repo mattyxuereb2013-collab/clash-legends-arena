@@ -35,6 +35,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashDrops'))),1);
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashLegendsCoins'))),wallet);
   await page.locator('#popupClose').click();
+  await page.evaluate(()=>localStorage.setItem('clashDrops','0'));
   console.log('PASS free Clash Pass, sequential claim-once coin and Drop rewards');
     console.log('PASS starter lock and first Trophy Road fighter unlock');
   await page.evaluate(()=>{localStorage.setItem('clashLegendsTrophies','75');window.clashLobbyRefresh()});
