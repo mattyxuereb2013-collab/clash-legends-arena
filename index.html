@@ -164,6 +164,25 @@ body:not(.phone-mode) #touch{display:none!important}
 #fighterArt{isolation:isolate}
 #fighterArt .champion-webgl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;filter:drop-shadow(0 15px 9px #1011477a)}
 #fighterArt.webgl-loaded #lobbyFighterCanvas{visibility:hidden}
+
+/* Clash Legends loot/progression UI: dramatic arcade panels, not plain menu rows */
+#lobbyPopup .popup-card{max-width:min(720px,94vw);background:
+ radial-gradient(circle at 52% -10%,#8a79f47a,transparent 53%),
+ linear-gradient(148deg,#343591,#1b255a 76%);border:3px solid #9eb6ff;
+ box-shadow:0 9px 0 #101842,0 19px 43px #050624ab;position:relative;overflow:auto}
+#lobbyPopup .popup-card:before{content:'';position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(120deg,transparent 0 64px,#ffffff04 65px 67px)}
+#popupTitle{font-size:clamp(20px,3vw,34px)!important;color:#ffe56d!important;text-shadow:0 3px #36234e,0 5px 8px #141033;letter-spacing:1.1px}
+#popupOptions{gap:11px;align-items:stretch}
+#popupOptions button{border-radius:12px;border:2px solid #a4b6ef;box-shadow:inset 0 2px #ffffff44,0 4px #0e1945;
+ background:linear-gradient(160deg,#4659b1,#263576);color:#f9f8ff;
+ min-height:53px;line-height:1.24;letter-spacing:.3px;transition:transform .1s,filter .1s}
+#popupOptions button:enabled:hover{filter:brightness(1.18);transform:translateY(-2px)}
+#popupOptions button:disabled{opacity:.77;cursor:not-allowed;box-shadow:inset 0 2px #ffffff19,0 3px #121845}
+#popupOptions button.reward-option{background:linear-gradient(160deg,#7360c6,#433b97);border-color:#e5baff}
+#popupOptions button.claim-option{background:linear-gradient(160deg,#ffe984,#efa52d);color:#3a2842;border-color:#fff4c5;text-shadow:none;box-shadow:inset 0 2px #fff9,0 5px #9a6017}
+#popupOptions button.locked-option{background:linear-gradient(160deg,#36416e,#222b51);color:#d8daf4}
+#popupOptions button.selected{background:linear-gradient(160deg,#f8c851,#dd8127);color:#342451;border-color:#fff5a2}
+@media(max-height:510px){#lobbyPopup .popup-card{padding:10px;max-height:91dvh}#popupOptions button{min-height:40px;padding:7px;font-size:12px}#popupTitle{margin:0 0 8px}}
 </style></head><body><canvas id="game"></canvas><div id="threeView"></div><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><button id="pauseBtn" type="button" hidden aria-label="Pause match">Ⅱ</button><div id="pauseOverlay" hidden><div class="pause-card"><h2>⏸ MATCH PAUSED</h2><p>Ready to jump back into the arena?</p><button type="button" id="resumeBtn">▶ RESUME MATCH</button><button type="button" id="surrenderBtn">🚪 LEAVE MATCH (LOSE TROPHIES)</button></div></div><div id="rotateNotice">📱<strong>ROTATE YOUR PHONE</strong><span>Clash Legends plays best in landscape.</span></div><div id="matchIntro" aria-live="polite"><h2 id="introTitle">10 LEGENDS ENTER</h2><div id="roster"></div><p id="introSub">SOLO SHOWDOWN</p></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
 <div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff" id="profileNickname">ROOKIE LEGEND</div><button type="button" id="profileSignout">SWITCH PROFILE</button></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency">💎 0</span></div></div>
 <div class="lobby-main"><div class="lobby-rail"><button id="fightersBtn">🦸<div>FIGHTERS</div></button><button id="shopBtn">🛒<div>SHOP</div></button><button id="questsBtn">📜<div>QUESTS</div></button></div>
@@ -242,6 +261,9 @@ const close=()=>popup.style.display='none';
 function screen(title,items){heading.textContent=title;options.replaceChildren();items.forEach(({label,action,selected:active,disabled})=>{
  const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=!!disabled;
  if(active)b.classList.add('selected');
+ if(/CLASH DROP|ARENA BOX|REWARD|TROPHY ROAD|HYPERCHARGE/i.test(label))b.classList.add('reward-option');
+ if(/CLAIM|OPEN|FREE DAILY|UNLOCK/i.test(label)&&!disabled)b.classList.add('claim-option');
+ if(/^🔒|LOCKED|UNLOCKS AT/i.test(label))b.classList.add('locked-option');
  if(action)b.addEventListener('click',action);options.appendChild(b)
 });popup.style.display='flex'}
 function notify(msg,action){screen(msg,[{label:'OKAY',action:action||close}])}
@@ -334,7 +356,7 @@ function quests(){
  screen('📜 DAILY QUESTS · '+day,questDefs.map((q,i)=>{
   const value=localStorage.getItem('clashDailyStatsDate')===day?num('clashDaily'+q.key):0;
   const done=localStorage.getItem('clashQuestClaim_'+i)===day;
-  return {label:(done?'✓ ':'')+q.name+' · '+Math.min(value,q.target)+'/'+q.target+(done?' · CLAIMED':value>=q.target?' · CLAIM +'+(q.drop?'✨ CLASH DROP':q.box?'📦 ARENA BOX':q.reward+' 🪙'):' · +'+q.reward+' 🪙'),disabled:done||value<q.target,selected:value>=q.target&&!done,action:()=>{
+  return {label:(done?'✓ ':'')+q.name+' · '+Math.min(value,q.target)+'/'+q.target+(done?' · CLAIMED':value>=q.target?' · CLAIM +'+(q.drop?'✨ CLASH DROP':q.box?'📦 ARENA BOX':q.reward+' 🪙'):' · +'+(q.drop?'✨ CLASH DROP':q.box?'📦 ARENA BOX':q.reward+' 🪙')),disabled:done||value<q.target,selected:value>=q.target&&!done,action:()=>{
    if(localStorage.getItem('clashQuestClaim_'+i)===day)return;
    if(localStorage.getItem('clashDailyStatsDate')!==day||num('clashDaily'+q.key)<q.target)return;
    localStorage.setItem('clashQuestClaim_'+i,day);if(q.drop)grantReward('drop',q.drop);else if(q.box)grantReward('box',q.box);else grantReward('coins',q.reward);refresh();quests()
