@@ -159,6 +159,11 @@ body:not(.phone-mode) #touch{display:none!important}
 @media(max-height:600px){#panel{gap:5px;padding:5px 12px}.lobby-top{padding-bottom:4px}.lobby-main{min-height:0}.lobby-rail{gap:5px}.lobby-rail button{min-height:51px;padding:3px;font-size:19px}.lobby-rail button div{font-size:10px;margin-top:3px}.fighter-stage{min-height:0;padding:4px 8px}.fighter-showcase{min-height:105px;max-height:clamp(110px,38vh,245px)}.fighter-name{font-size:25px}.champion-progress{margin:3px 0}.champion-progress span{padding:2px 8px}.champion-upgrade{padding:4px 10px;font-size:11px}.stage-heading{font-size:9px}.fighter-cycle{width:40px;height:47px;font-size:21px}.lobby-bottom{gap:7px}.mode-card{padding:6px 12px}.mode-title{font-size:17px}.mode-icon{font-size:24px}#start{font-size:22px;min-width:150px;padding:7px 20px}#trophyTrack{padding:5px 8px}.currency{padding:5px;font-size:12px}.profile{padding:4px 9px}.lobby-footer{display:none}}
 @media(max-width:700px){.lobby-main{grid-template-columns:minmax(68px,.6fr) minmax(130px,2.6fr) minmax(68px,.6fr);gap:5px}.lobby-rail button{padding:4px 2px;font-size:19px}.lobby-rail button div{font-size:10px}.fighter-stage{padding:4px}.stage-season{display:none}.fighter-art{width:min(62%,215px)}.fighter-cycle{width:32px;min-height:44px;height:44px;border-width:2px;border-radius:11px}.champion-upgrade{font-size:10px}.champion-progress span{padding:3px 5px}.fighter-sub{font-size:10px}.lobby-bottom{flex-wrap:nowrap}.mode-card{min-width:0}.mode-desc{font-size:10px}#start{min-width:110px;padding:7px 11px}}
 @media(max-width:410px) and (orientation:portrait){.lobby-top{flex-wrap:nowrap}.currencies{gap:2px}.currency{min-width:0;font-size:10px;padding:4px}.profile b{font-size:10px}.profile{padding:3px}.fighter-showcase{min-height:125px}.lobby-main{grid-template-columns:65px minmax(112px,1fr) 65px}.lobby-rail button{font-size:17px}.lobby-rail button div{font-size:8px}}
+
+/* True 3D champion showcase; original canvas is preserved as fallback. */
+#fighterArt{isolation:isolate}
+#fighterArt .champion-webgl{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;filter:drop-shadow(0 15px 9px #1011477a)}
+#fighterArt.webgl-loaded #lobbyFighterCanvas{visibility:hidden}
 </style></head><body><canvas id="game"></canvas><div id="threeView"></div><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><button id="pauseBtn" type="button" hidden aria-label="Pause match">Ⅱ</button><div id="pauseOverlay" hidden><div class="pause-card"><h2>⏸ MATCH PAUSED</h2><p>Ready to jump back into the arena?</p><button type="button" id="resumeBtn">▶ RESUME MATCH</button><button type="button" id="surrenderBtn">🚪 LEAVE MATCH (LOSE TROPHIES)</button></div></div><div id="rotateNotice">📱<strong>ROTATE YOUR PHONE</strong><span>Clash Legends plays best in landscape.</span></div><div id="matchIntro" aria-live="polite"><h2 id="introTitle">10 LEGENDS ENTER</h2><div id="roster"></div><p id="introSub">SOLO SHOWDOWN</p></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
 <div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff" id="profileNickname">ROOKIE LEGEND</div><button type="button" id="profileSignout">SWITCH PROFILE</button></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency">💎 0</span></div></div>
 <div class="lobby-main"><div class="lobby-rail"><button id="fightersBtn">🦸<div>FIGHTERS</div></button><button id="shopBtn">🛒<div>SHOP</div></button><button id="questsBtn">📜<div>QUESTS</div></button></div>
@@ -758,5 +763,85 @@ document.querySelector('#trackButton').onclick=roadPopup;
 document.querySelector('#trophyTrack').addEventListener('click',e=>{if(!e.target.closest('#trackButton'))roadPopup()});
 document.querySelector('#modeCard').onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();document.querySelector('#modesBtn').click()}};
 renderRoad();window.clashRefreshRoad=renderRoad;window.clashLobbyRefresh?.();
+})();
+</script>
+<script>
+/* Independent, animated Three.js lobby character preview. Canvas fallback stays available. */
+(()=>{'use strict';
+const stage=document.getElementById('fighterArt'),menu=document.getElementById('menu');
+if(!stage||!window.THREE)return;
+let renderer;
+try{
+ const T=window.THREE;
+ renderer=new T.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));
+ renderer.setClearColor(0x000000,0);
+ if(T.SRGBColorSpace)renderer.outputColorSpace=T.SRGBColorSpace;
+ const canvas=renderer.domElement;canvas.className='champion-webgl';canvas.setAttribute('aria-hidden','true');stage.appendChild(canvas);
+ const scene=new T.Scene();
+ const camera=new T.PerspectiveCamera(33,1,.1,80);camera.position.set(0,3.65,10.4);camera.lookAt(0,1.35,0);
+ scene.add(new T.HemisphereLight(0xf5f3ff,0x4d3b65,1.55));
+ const key=new T.DirectionalLight(0xffe6b4,2.25);key.position.set(-4,8,7);scene.add(key);
+ const rim=new T.DirectionalLight(0x72a9ff,1.2);rim.position.set(5,5,-4);scene.add(rim);
+ const palette=[0x2e98f1,0xf36e45,0x51b96d,0xa769ee,0x72cde8,0xefb849,0xea67a3,0xba9974];
+ const trim=[0x92e3ff,0xffcd76,0xbefa7b,0xf0b7ff,0xe7ffff,0xffeb93,0xffdaef,0xf9dc9d];
+ const dark=[0x214b9c,0xa34237,0x347944,0x6d3ca2,0x237d9b,0x967037,0x942d70,0x72513c];
+ const cloth=[0x292951,0x352644,0x243e35,0x2e254e,0x243a55,0x493927,0x4b2a3a,0x46372b];
+ const hero=new T.Group();scene.add(hero);
+ const makeMat=(c)=>new T.MeshStandardMaterial({color:c,roughness:.64,metalness:.07,flatShading:true});
+ const sphere=new T.SphereGeometry(1,18,12),cylinder=new T.CylinderGeometry(1,1,1,16),box=new T.BoxGeometry(1,1,1);
+ const parts={};
+ function add(parent,geo,mat,x,y,z,sx=1,sy=1,sz=1){
+  const m=new T.Mesh(geo,mat);m.position.set(x,y,z);m.scale.set(sx,sy,sz);parent.add(m);return m
+ }
+ const pad=new T.Mesh(new T.CylinderGeometry(1.85,1.75,.24,40),makeMat(0x373077));pad.position.y=-.05;scene.add(pad);
+ const padTop=new T.Mesh(new T.CylinderGeometry(1.66,1.67,.09,40),makeMat(0x7771c9));padTop.position.y=.13;scene.add(padTop);
+ let lastIndex=-1;
+ function rebuild(index){
+  while(hero.children.length){const o=hero.children[0];hero.remove(o)}
+  const suit=makeMat(palette[index]),accent=makeMat(trim[index]),shadow=makeMat(dark[index]),pants=makeMat(cloth[index]),skin=makeMat(index===2?0xe0c79b:0xf2bb94);
+  const eyes=makeMat(0xffffff),pupils=makeMat(0x21223b);
+  parts.legL=add(hero,sphere,pants,-.4,.52,0,.32,.56,.4);
+  parts.legR=add(hero,sphere,pants,.4,.52,0,.32,.56,.4);
+  add(hero,sphere,suit,0,1.68,0,.95,1.06,.73);
+  add(hero,box,accent,0,1.72,.67,.88,.20,.12);
+  add(hero,sphere,skin,0,3.0,.14,.9,.86,.78);
+  add(hero,sphere,shadow,0,3.62,-.22,.94,.34,.72);
+  add(hero,sphere,eyes,-.34,3.09,.83,.22,.28,.10);
+  add(hero,sphere,eyes,.34,3.09,.83,.22,.28,.10);
+  add(hero,sphere,pupils,-.31,3.06,.91,.10,.16,.08);
+  add(hero,sphere,pupils,.37,3.06,.91,.10,.16,.08);
+  add(hero,sphere,skin,-1.02,1.72,0,.36,.65,.39);
+  add(hero,sphere,skin,1.02,1.72,0,.36,.65,.39);
+  add(hero,sphere,shadow,-1.04,2.1,0,.42,.33,.43);
+  add(hero,sphere,shadow,1.04,2.1,0,.42,.33,.43);
+  const gun=new T.Group();gun.position.set(1.05,1.9,.4);gun.rotation.z=-.22;
+  hero.add(gun);add(gun,box,shadow,.36,0,.04,.95,.48,.62);
+  add(gun,box,accent,.83,.02,.04,.36,.34,.49);
+  add(gun,cylinder,pants,1.06,.01,.04,.36,.2,.36).rotation.z=Math.PI/2;
+  if(index===1||index===6){add(hero,sphere,accent,-.36,3.85,-.25,.38,.28,.4);add(hero,sphere,accent,.39,3.77,-.33,.27,.33,.4)}
+  if(index===2){add(hero,sphere,shadow,-.38,3.8,-.18,.62,.34,.7);add(hero,sphere,accent,.46,3.79,-.24,.48,.31,.66)}
+  if(index===3||index===4){add(hero,box,shadow,0,3.85,-.1,1.47,.35,1.04);add(hero,sphere,accent,0,3.97,.15,.42,.13,.5)}
+  if(index===5||index===7){add(hero,cylinder,shadow,0,3.92,-.10,1.12,.28,1.06);add(hero,cylinder,accent,0,3.81,-.10,1.45,.11,1.37)}
+  lastIndex=index;
+ }
+ let w=0,h=0;
+ function frame(now){
+  requestAnimationFrame(frame);
+  if(menu.style.display==='none'||document.hidden)return;
+  const width=stage.clientWidth,height=stage.clientHeight;
+  if(width<50||height<50)return;
+  if(width!==w||height!==h){w=width;h=height;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+  const n=Math.max(0,Math.min(7,Number(localStorage.getItem('clashLegendsFighter')||0)));
+  if(n!==lastIndex)rebuild(n);
+  const t=now*.001;
+  hero.rotation.y=-.2+Math.sin(t*.7)*.17;
+  hero.position.y=.06+Math.sin(t*2.2)*.06;
+  if(parts.legL&&parts.legR){parts.legL.rotation.z=Math.sin(t*2.6)*.06;parts.legR.rotation.z=-Math.sin(t*2.6)*.06}
+  renderer.render(scene,camera);
+ }
+ stage.classList.add('webgl-loaded');requestAnimationFrame(frame);
+ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();stage.classList.remove('webgl-loaded')},{once:true});
+}catch(e){console.warn('3D lobby preview unavailable, using 2D fallback',e);stage.classList.remove('webgl-loaded');if(renderer)renderer.dispose()}
 })();
 </script></body></html>
