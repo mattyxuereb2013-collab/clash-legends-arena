@@ -637,8 +637,13 @@ function createFighter3(style,me){
  mesh3(body,g.bx,g.mat(trim),0,38,19,30,8,6);
  mesh3(body,g.sphere,g.mat(dark),-20,45,0,9,13,12);
  mesh3(body,g.sphere,g.mat(dark),20,45,0,9,13,12);
- const left=mesh3(body,g.sphere,g.mat(skin),-25,36,10,9,10,9);
- mesh3(body,g.sphere,g.mat(skin),24,36,10,9,10,9);
+ const armLeft=new T.Group(),armRight=new T.Group();
+ armLeft.position.set(-23,51,3);armRight.position.set(23,51,3);
+ body.add(armLeft,armRight);
+ mesh3(armLeft,g.sphere,g.mat(main),-7,-13,3,11,16,12);
+ mesh3(armLeft,g.sphere,g.mat(skin),-9,-26,9,10,11,10);
+ mesh3(armRight,g.sphere,g.mat(main),7,-13,3,11,16,12);
+ mesh3(armRight,g.sphere,g.mat(skin),9,-26,9,10,11,10);
  mesh3(body,g.sphere,g.mat(skin),0,80,2,23,23,20);
  // Readable animated eyes remain visible from the elevated gameplay camera.
  for(const xx of [-9,9]){
@@ -709,16 +714,24 @@ function createFighter3(style,me){
  }
  const hpBg=mesh3(root,g.bx,g.mat(0x281e40),0,117,0,62,6,7);
  const hpFill=mesh3(root,g.bx,g.mat(me?0x56efa3:0xff6175),0,117,1,60,4,7);
- return{root,body,gun,legL,legR,hpFill,ring,style,me,shoulderPad,shoulderPadR,backpack};
+ return{root,body,gun,legL,legR,armLeft,armRight,hpFill,ring,style,me,shoulderPad,shoulderPadR,backpack};
 }
 function updateFighter3(o,style,me){
  let g=gfx3,m=g.units.get(o);if(!m){m=createFighter3(style,me||!!o.friendly);g.units.set(o,m)}
  m.root.visible=o.hp>0&&(me||o.friendly||!concealedFrom(hero,o));m.root.position.set(o.x,0,o.y);
  const t=performance.now()*.001,walk=Math.hypot(o.vx||0,o.vy||0);
- m.body.position.y=Math.sin(t*4+o.x*.015)*(walk>.3?3:1.1);
+ const stride=Math.sin(t*11+o.x*.006),moveWeight=walk>.28?1:0;
+ m.body.position.y=(moveWeight?Math.abs(stride)*3.3:Math.sin(t*2.3)*1.4);
+ m.body.scale.y=1+(moveWeight?Math.abs(stride)*.018:Math.sin(t*2.3)*.013);
  m.body.rotation.z=walk>.3?Math.sin(t*9+o.y*.02)*.05:Math.sin(t*2)*.018;
  m.body.visible=!(me&&o.inv>0&&Math.floor(performance.now()/95)%2===0);
- m.legL.position.y=17+Math.sin(t*12)*walk*2;m.legR.position.y=17-Math.sin(t*12)*walk*2;
+ m.legL.position.y=17+stride*moveWeight*5;m.legR.position.y=17-stride*moveWeight*5;
+ m.legL.position.z=2+Math.cos(t*11+o.x*.006)*moveWeight*5;
+ m.legR.position.z=2-Math.cos(t*11+o.x*.006)*moveWeight*5;
+ const shotPulse=Math.max(0,1-(performance.now()-(o.lastShot||0))/230);
+ m.armLeft.rotation.x=-stride*moveWeight*.32+shotPulse*.13;
+ m.armRight.rotation.x=stride*moveWeight*.32-shotPulse*.34;
+ m.armRight.rotation.z=-shotPulse*.18;
  m.shoulderPad.rotation.z=Math.sin(t*8)*walk*.07;m.shoulderPadR.rotation.z=-Math.sin(t*8)*walk*.07;
  const powered=me&&hero.super>=100;
  m.ring.material.color.setHex(powered?0xffee6e:me?0xffd76a:o.friendly?0x6cffee:0xff5778);
@@ -726,7 +739,7 @@ function updateFighter3(o,style,me){
  const facing=me?aim():o.remote?(o.facing||0):Math.atan2(hero.y-o.y,hero.x-o.x);
  m.body.rotation.y=Math.PI/2-facing;
  m.gun.rotation.y=-Math.PI/2;
- m.gun.position.z=15-Math.max(0,1-(performance.now()-(o.lastShot||0))/220)*10;
+ m.gun.position.z=15-shotPulse*12;
  m.hpFill.scale.x=Math.max(.001,60*Math.max(0,o.hp)/Math.max(1,o.max));
  m.hpFill.position.x=-30+m.hpFill.scale.x/2;
  return m;
