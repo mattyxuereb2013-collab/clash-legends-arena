@@ -71,6 +71,7 @@ const base='http://127.0.0.1:8765/?e2e=1';
   await page.locator('#popupClose').click();
   await page.locator('#friendsBtn').click();
   assert.match(await page.locator('#popupTitle').innerText(),/LOCAL|DEVICE/);
+  await page.locator('#popupClose').click();
   await page.screenshot({path:'arena-lobby.png'});
   assert.deepEqual(errors,[],'uncaught JavaScript errors on desktop');
   console.log('PASS desktop: profile, all-fighter selection, shop, upgrade, modes, renderer, practice win, negative trophies, quests, ranked, friends');
