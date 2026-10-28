@@ -112,8 +112,13 @@ for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particl
 if(hero.x<stormMargin||hero.y<stormMargin||hero.x>worldW-stormMargin||hero.y>worldH-stormMargin){hero.hp-=22*dt;healDelay=5;hitFlash=Math.max(hitFlash,.15)}
 if(bots.length===0||hero.hp<=0){
 playing=false;const victory=hero.hp>0,placement=victory?1:Math.min(10,bots.length+1);
-sessionTrophies=[0,12,9,7,5,4,3,2,1,0,0][placement];sessionCoins+=victory?60:Math.max(5,(11-placement)*5);
-localStorage.setItem('clashLegendsTrophies',Number(localStorage.getItem('clashLegendsTrophies')||0)+sessionTrophies);
+const fighterTrophyKey='clashBoltTrophies',oldTotal=Math.max(0,Number(localStorage.getItem('clashLegendsTrophies')||0));if(localStorage.getItem(fighterTrophyKey)===null)localStorage.setItem(fighterTrophyKey,oldTotal);const currentFighterTrophies=Math.max(0,Number(localStorage.getItem(fighterTrophyKey)||0));
+const baseRewards=[0,12,9,7,5,4,3,2,1,-2,-4],tier=Math.floor(currentFighterTrophies/200);
+sessionTrophies=baseRewards[placement]>0?Math.max(1,baseRewards[placement]-tier):baseRewards[placement]-tier;
+sessionTrophies=Math.max(-currentFighterTrophies,sessionTrophies);
+sessionCoins+=victory?60:Math.max(5,(11-placement)*5);
+localStorage.setItem(fighterTrophyKey,currentFighterTrophies+sessionTrophies);
+localStorage.setItem('clashLegendsTrophies',Math.max(0,oldTotal+sessionTrophies));
 localStorage.setItem('clashLegendsCoins',Number(localStorage.getItem('clashLegendsCoins')||0)+sessionCoins);
 localStorage.setItem('clashLegendsMatches',Number(localStorage.getItem('clashLegendsMatches')||0)+1);
 if(victory)localStorage.setItem('clashLegendsWins',Number(localStorage.getItem('clashLegendsWins')||0)+1);
