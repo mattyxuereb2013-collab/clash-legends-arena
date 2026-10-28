@@ -201,7 +201,7 @@ body:not(.phone-mode) #touch{display:none!important}
 #popupOptions .road-claimed{opacity:.68;border-left-color:#59daa1!important}
 @media(prefers-reduced-motion:reduce){#lobbyPopup[data-loot] #popupTitle,#lobbyPopup[data-loot] #popupOptions button:first-child{animation:none}}
 </style></head><body><canvas id="game"></canvas><div id="threeView"></div><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><button id="pauseBtn" type="button" hidden aria-label="Pause match">Ⅱ</button><div id="pauseOverlay" hidden><div class="pause-card"><h2>⏸ MATCH PAUSED</h2><p>Ready to jump back into the arena?</p><button type="button" id="resumeBtn">▶ RESUME MATCH</button><button type="button" id="surrenderBtn">🚪 LEAVE MATCH (LOSE TROPHIES)</button></div></div><div id="rotateNotice">📱<strong>ROTATE YOUR PHONE</strong><span>Clash Legends plays best in landscape.</span></div><div id="matchIntro" aria-live="polite"><h2 id="introTitle">10 LEGENDS ENTER</h2><div id="roster"></div><p id="introSub">SOLO SHOWDOWN</p></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
-<div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff" id="profileNickname">ROOKIE LEGEND</div><button type="button" id="profileSignout">SWITCH PROFILE</button></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency" id="lobbyDrops" title="Your unopened Clash Drops">✨ 0</span><span class="currency" id="lobbyBoxes" title="Your unopened Arena Boxes">📦 0</span></div></div>
+<div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff" id="profileNickname">ROOKIE LEGEND</div><button type="button" id="profileSignout">SWITCH PROFILE</button></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency" id="lobbyDrops" title="Your unopened Clash Drops">✨ 0</span><span class="currency" id="lobbyBoxes" title="Your unopened Arena Boxes">📦 0</span><span class="currency" id="lobbyPass" title="Free Clash Pass experience">🎟️ 0 XP</span></div></div>
 <div class="lobby-main"><div class="lobby-rail"><button id="fightersBtn">🦸<div>FIGHTERS</div></button><button id="shopBtn">🛒<div>SHOP</div></button><button id="questsBtn">📜<div>QUESTS</div></button></div>
 <div class="fighter-stage"><div class="stage-heading"><span class="stage-kicker">YOUR CHAMPION</span><span class="stage-season">⚔️ ARENA SEASON</span></div><div class="fighter-showcase"><button type="button" id="fighterPrev" class="fighter-cycle" aria-label="Previous fighter">❮</button><div class="fighter-art" id="fighterArt" style="--fighter:#38b6ff;--fighter-dark:#236bc2"><canvas id="lobbyFighterCanvas" width="420" height="460" aria-label="Animated fighter preview"></canvas></div><button type="button" id="fighterNext" class="fighter-cycle" aria-label="Next fighter">❯</button></div><div class="fighter-name" id="fighterName">BOLT</div><div class="fighter-sub" id="fighterSubtitle">⚡ STARTER FIGHTER · POWER 1</div><div class="champion-progress"><span id="championPower">⚡ POWER 1</span><span id="championTrophies">🏆 0 TROPHIES</span></div><button type="button" id="championUpgrade" class="champion-upgrade">⬆ UPGRADE FIGHTER</button></div>
 <div class="lobby-rail"><button id="modesBtn">🎮<div>MODES</div></button><button id="rankedBtn">🏆<div>RANKED</div></button><button id="friendsBtn">👥<div>FRIENDS</div></button></div></div>
@@ -264,12 +264,45 @@ function openRandomReward(kind,returnTo){
  ]);
  popup.dataset.loot=tier.toLowerCase();
 }
+// Clash Pass is always 100% free: no premium track, paywall or purchase.
+const passTiers=[
+ {xp:50,type:'coins',amount:90},{xp:120,type:'drop',amount:1},
+ {xp:200,type:'points',amount:50},{xp:300,type:'box',amount:1},
+ {xp:420,type:'coins',amount:180},{xp:560,type:'drop',amount:2},
+ {xp:710,type:'points',amount:110},{xp:880,type:'box',amount:2},
+ {xp:1060,type:'coins',amount:350},{xp:1260,type:'drop',amount:3},
+ {xp:1500,type:'points',amount:180},{xp:1800,type:'box',amount:3}
+];
+const passXP=()=>num('clashPassXP');
+const passClaimed=()=>Math.min(passTiers.length,num('clashPassClaimed'));
+function earnPassXP(value){
+ const gained=Math.max(0,Math.floor(Number(value)||0));
+ if(gained)localStorage.setItem('clashPassXP',String(passXP()+gained))
+}
+function clashPass(){
+ const xp=passXP(),idx=passClaimed(),next=passTiers[idx];
+ screen('🎟️ CLASH PASS · FREE FOREVER',[
+ {label:'⭐ PASS XP '+xp+(next?' / '+next.xp:' · ALL TIERS COMPLETE'),disabled:true},
+ {label:'✅ ALL 12 TIERS FREE · NO PREMIUM TRACK',disabled:true},
+ ...passTiers.map((tier,i)=>({
+  label:(i<idx?'✓ ':i===idx&&xp>=tier.xp?'🎁 ':'🔒 ')+'TIER '+(i+1)+' · '+tier.xp+' XP · '+rewardText(tier)+(i===idx&&xp>=tier.xp?' · CLAIM':''),
+  disabled:i!==idx||xp<tier.xp,selected:i===idx&&xp>=tier.xp,action:()=>{
+   if(passClaimed()!==i||passXP()<tier.xp)return;
+   localStorage.setItem('clashPassClaimed',String(i+1));
+   grantReward(tier.type,tier.amount);
+   refresh();clashPass()
+  }
+ })),
+ {label:'📜 COMPLETE QUESTS FOR MORE PASS XP',action:quests}
+ ])
+}
 function rewardsMenu(){
  screen('🎁 REWARDS & COLLECTION',[
   {label:'✨ CLASH DROPS '+drops()+' · OPEN',disabled:drops()<=0,action:()=>openRandomReward('drop',rewardsMenu)},
   {label:'📦 ARENA BOXES '+boxes()+' · OPEN',disabled:boxes()<=0,action:()=>openRandomReward('box',rewardsMenu)},
   {label:'🏆 TROPHY ROAD REWARDS',action:()=>document.querySelector('#trackButton').click()},
-  {label:'⬆ FIGHTER POWER POINTS · '+points(selected()),disabled:true}
+  {label:'⬆ FIGHTER POWER POINTS · '+points(selected()),disabled:true},
+  {label:'🎟️ FREE CLASH PASS · '+passXP()+' XP',action:clashPass}
  ])
 }
 
@@ -292,6 +325,7 @@ function refresh(){
  if($('lobbyCoins'))$('lobbyCoins').textContent='🪙 '+coins();
  if($('lobbyDrops'))$('lobbyDrops').textContent='✨ '+drops();
  if($('lobbyBoxes'))$('lobbyBoxes').textContent='📦 '+boxes();
+ if($('lobbyPass'))$('lobbyPass').textContent='🎟️ '+passXP()+' XP';
  const i=selected(),lv=Math.max(1,num(key(i,'Level'))),t=num(key(i,'Trophies'));
  if($('fighterName'))$('fighterName').textContent=names[i];
  if($('fighterSubtitle'))$('fighterSubtitle').textContent=['⚡ PRECISION BLASTER','🔥 FIRESTORM FIGHTER','🌿 NATURE GUARDIAN','💜 SHADOW STRIKER','❄️ FREEZING ARTILLERY','🎯 TRIPLE-SHOT ACE','🌟 STAR-BURST SPECIALIST','🪨 STONE STRIKER'][i]+(['',' · ✨ GOLDEN',' · 🌑 SHADOW'][Number(localStorage.getItem('clashSkin'+names[i])||0)]||'');
@@ -369,6 +403,7 @@ function shop(){const claimed=localStorage.getItem('clashDailyGift')===today();
    if(localStorage.getItem('clashDailyGift')===today())return;
    localStorage.setItem('clashDailyGift',today());localStorage.setItem('clashLegendsCoins',coins()+50);refresh();shop()
   }},
+  {label:'🎟️ CLASH PASS · FREE · '+passXP()+' XP',action:clashPass},
   {label:'⬆ UPGRADE '+names[selected()],action:upgrade},
   {label:'🎨 COSMETIC SKINS',action:cosmeticShop},
   {label:'🦸 BRAWLER COLLECTION',action:fighters},
@@ -391,7 +426,7 @@ function quests(){
   return {label:(done?'✓ ':'')+q.name+' · '+Math.min(value,q.target)+'/'+q.target+(done?' · CLAIMED':value>=q.target?' · CLAIM +'+(q.drop?'✨ CLASH DROP':q.box?'📦 ARENA BOX':q.reward+' 🪙'):' · +'+(q.drop?'✨ CLASH DROP':q.box?'📦 ARENA BOX':q.reward+' 🪙')),disabled:done||value<q.target,selected:value>=q.target&&!done,action:()=>{
    if(localStorage.getItem('clashQuestClaim_'+i)===day)return;
    if(localStorage.getItem('clashDailyStatsDate')!==day||num('clashDaily'+q.key)<q.target)return;
-   localStorage.setItem('clashQuestClaim_'+i,day);if(q.drop)grantReward('drop',q.drop);else if(q.box)grantReward('box',q.box);else grantReward('coins',q.reward);refresh();quests()
+   localStorage.setItem('clashQuestClaim_'+i,day);if(q.drop)grantReward('drop',q.drop);else if(q.box)grantReward('box',q.box);else grantReward('coins',q.reward);earnPassXP(q.drop||q.box?100:75);refresh();quests()
   }}
  }))}
 function modeName(){return localStorage.getItem('clashGameMode')||'showdown'}
@@ -592,6 +627,7 @@ try{const old=JSON.parse(localStorage.getItem('clashMatchHistory')||'[]'),histor
 const today=new Date(),day=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 if(localStorage.getItem('clashDailyStatsDate')!==day){localStorage.setItem('clashDailyStatsDate',day);for(const k of ['Matches','Wins','Kills'])localStorage.setItem('clashDaily'+k,'0')}
 if(!['training','duel'].includes(localStorage.getItem('clashGameMode'))){localStorage.setItem('clashDailyMatches',Number(localStorage.getItem('clashDailyMatches')||0)+1);if(victory)localStorage.setItem('clashDailyWins',Number(localStorage.getItem('clashDailyWins')||0)+1);localStorage.setItem('clashDailyKills',Number(localStorage.getItem('clashDailyKills')||0)+showdownKills)}
+if(!onlineResult&&localStorage.getItem('clashGameMode')!=='training')localStorage.setItem('clashPassXP',String(Math.max(0,Number(localStorage.getItem('clashPassXP')||0))+35+(victory?35:0)+Math.min(40,showdownKills*5)));
 menu.style.display='flex';
 document.querySelector('#panel').innerHTML='<div class="result-screen"><div class="result-card"><div class="result-kicker">'+(onlineResult?'ONLINE 1V1 · UNRANKED':victory?'VICTORY ROYALE':'MATCH COMPLETE')+'</div><div class="result-place">'+(onlineResult?(victory?'🏆 WIN':'💥 LOSS'):(victory?'🏆':'⭐')+' #'+placement)+'</div><h1>'+(onlineResult?(victory?'DUEL VICTORY!':'DUEL DEFEAT'):victory?'YOU ARE THE CHAMPION!':'GOOD FIGHT, LEGEND!')+'</h1><div class="result-fighter">'+['⚡ BOLT','🔥 EMBER','🌿 MOSS','💜 VIOLET','❄️ FROST','🎯 RICOCHET','🌟 NOVA','🪨 TERRA'][selectedFighter]+' · POWER '+fighterLevel()+'</div><div class="result-stats"><div><span>PLACEMENT</span><b>#'+placement+' / '+(onlineResult?2:10)+'</b></div><div><span>ELIMINATIONS</span><b>💥 '+(onlineResult?(victory?1:0):showdownKills)+'</b></div><div><span>POWER CUBES</span><b>💚 '+hero.cubes+'</b></div></div><div class="result-rewards">'+(onlineResult?'<div>🌐 FRIENDLY DUEL · NO RANKED REWARDS</div>':'<div>🏆 '+(sessionTrophies>0?'+':'')+sessionTrophies+' TROPHIES</div><div>🪙 +'+sessionCoins+' COINS</div>')+'</div><button id="again">RETURN TO LOBBY ▶</button></div></div>';
 document.querySelector('#again').onclick=()=>location.reload();
