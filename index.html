@@ -185,15 +185,8 @@ const modes=[
 function modeSelect(id){localStorage.setItem('clashGameMode',id);updateMode();close()}
 function updateMode(){const m=modes.find(v=>v.id===modeName())||modes[0];if($('modeIcon'))$('modeIcon').textContent=m.name.split(' ')[0];if($('modeTitle'))$('modeTitle').textContent=m.name.slice(3);if($('modeDesc'))$('modeDesc').textContent=m.desc}
 function modeMenu(){screen('🎮 SELECT GAME MODE',modes.map(m=>({label:m.name+' · '+m.desc,selected:modeName()===m.id,action:()=>modeSelect(m.id)})))}
-function ranked(){
- const total=num('clashLegendsTrophies'),bands=['BRONZE','SILVER','GOLD','DIAMOND','MYTHIC','LEGENDARY'];
- const division=Math.min(5,Math.floor(total/350));
- screen('🏆 TROPHY LEAGUE',[
-  {label:'🏅 '+bands[division]+' · '+total+' TROPHIES',disabled:true},
-  {label:'📈 NEXT LEAGUE: '+(division===5?'MAX':(division+1)*350+' TROPHIES'),disabled:true},
-  {label:'🤖 MATCHES ARE AGAINST BOTS, NOT ONLINE RANKED',disabled:true},
-  {label:'🌪️ PLAY SOLO SHOWDOWN',action:()=>modeSelect('showdown')}
- ])}
+function matchHistory(){let h=[];try{h=JSON.parse(localStorage.getItem('clashMatchHistory')||'[]');if(!Array.isArray(h))h=[]}catch(e){}screen('📖 LAST MATCHES',h.length?h.slice(0,10).map(v=>({label:(v.place===1?'🏆':'🎮')+' '+v.fighter+' · #'+v.place+' · '+v.kills+' KOs · '+(v.trophies>0?'+':'')+v.trophies+' 🏆',disabled:true})).concat([{label:'◀ BACK',action:ranked}]):[{label:'NO MATCHES YET',disabled:true},{label:'◀ BACK',action:ranked}])}
+function ranked(){const total=num('clashLegendsTrophies'),bands=['BRONZE','SILVER','GOLD','DIAMOND','MYTHIC','LEGENDARY'];const division=Math.min(5,Math.floor(total/350)),matches=num('clashLegendsMatches'),wins=num('clashLegendsWins');screen('🏆 TROPHY LEAGUE',[{label:'🏅 '+bands[division]+' · '+total+' TROPHIES',disabled:true},{label:'📈 NEXT LEAGUE: '+(division===5?'MAX':(division+1)*350+' TROPHIES'),disabled:true},{label:'📊 '+wins+' WINS / '+matches+' MATCHES · '+(matches?Math.round(wins/matches*100):0)+'% WIN RATE',disabled:true},{label:'📖 MATCH HISTORY',action:matchHistory},{label:'🤖 OFFLINE BOTS · ONLINE RANKED NOT BUILT',disabled:true},{label:'🌪️ PLAY SOLO SHOWDOWN',action:()=>modeSelect('showdown')}])}
 function readFriends(){try{const x=JSON.parse(localStorage.getItem('clashLocalFriends')||'[]');return Array.isArray(x)?x.filter(v=>typeof v==='string').slice(0,25):[]}catch(e){return[]}}
 function friends(){
  const list=readFriends();screen('👥 FRIENDS · THIS DEVICE ONLY',[
@@ -308,6 +301,8 @@ localStorage.setItem('clashLegendsTrophies',Math.max(0,oldTotal+sessionTrophies)
 localStorage.setItem('clashLegendsCoins',Number(localStorage.getItem('clashLegendsCoins')||0)+sessionCoins);
 localStorage.setItem('clashLegendsMatches',Number(localStorage.getItem('clashLegendsMatches')||0)+1);
 if(victory)localStorage.setItem('clashLegendsWins',Number(localStorage.getItem('clashLegendsWins')||0)+1);
+try{const old=JSON.parse(localStorage.getItem('clashMatchHistory')||'[]'),history=Array.isArray(old)?old:[];history.unshift({at:new Date().toISOString(),fighter:['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'][selectedFighter],mode:localStorage.getItem('clashGameMode')||'showdown',place:placement,kills:showdownKills,trophies:sessionTrophies,coins:sessionCoins});localStorage.setItem('clashMatchHistory',JSON.stringify(history.slice(0,20)))}catch(e){console.warn('History not saved',e)}
+
 const today=new Date(),day=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
 if(localStorage.getItem('clashDailyStatsDate')!==day){localStorage.setItem('clashDailyStatsDate',day);for(const k of ['Matches','Wins','Kills'])localStorage.setItem('clashDaily'+k,'0')}
 if(localStorage.getItem('clashGameMode')!=='training'){localStorage.setItem('clashDailyMatches',Number(localStorage.getItem('clashDailyMatches')||0)+1);if(victory)localStorage.setItem('clashDailyWins',Number(localStorage.getItem('clashDailyWins')||0)+1);localStorage.setItem('clashDailyKills',Number(localStorage.getItem('clashDailyKills')||0)+showdownKills)}
