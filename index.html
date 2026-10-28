@@ -42,29 +42,74 @@
 <script>
 (()=>{'use strict';
 const c=document.querySelector('#game'),x=c.getContext('2d'),menu=document.querySelector('#menu'),hpEl=document.querySelector('#health'),scoreEl=document.querySelector('#score'),waveEl=document.querySelector('#wave');
-let stormTime=0,matchDone=false,showdownKills=0;let drops=[],combo=0,comboClock=0,sessionCoins=0,sessionTrophies=0,selectedFighter=0,heroColors=['#318cf5','#ff9651','#83d96a','#d18af5'];let w=0,h=0,scale=1,worldW=1100,worldH=750,playing=false,hero,bots=[],shots=[],particles=[],walls=[],score=0,kills=0,wave=1,spawnClock=0,fireClock=0,keys={},mouse={x:0,y:0,down:false},touchMove={x:0,y:0},touchAim={x:1,y:0},touchFire=false,last=0;
+let stormTime=0,matchDone=false,showdownKills=0,crates=[];let drops=[],combo=0,comboClock=0,sessionCoins=0,sessionTrophies=0,selectedFighter=0,heroColors=['#318cf5','#ff9651','#83d96a','#d18af5'];let w=0,h=0,scale=1,worldW=1100,worldH=750,playing=false,hero,bots=[],shots=[],particles=[],walls=[],score=0,kills=0,wave=1,spawnClock=0,fireClock=0,keys={},mouse={x:0,y:0,down:false},touchMove={x:0,y:0},touchAim={x:1,y:0},touchFire=false,last=0;
 const rand=(a,b)=>a+Math.random()*(b-a),clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
 function resize(){w=c.width=innerWidth*devicePixelRatio;h=c.height=innerHeight*devicePixelRatio;scale=Math.min(w/worldW,h/worldH); }addEventListener('resize',resize);resize();
-function reset(){selectedFighter=Number(localStorage.getItem('clashLegendsFighter')||0);hero={x:worldW/2,y:worldH/2,r:22,hp:100,max:100,speed:245+(selectedFighter===3?35:0),super:0,inv:0};bots=[];shots=[];particles=[];drops=[];combo=0;comboClock=0;sessionCoins=0;sessionTrophies=0;stormTime=0;matchDone=false;showdownKills=0;walls=[{x:220,y:165,w:140,h:52},{x:740,y:165,w:140,h:52},{x:220,y:530,w:140,h:52},{x:740,y:530,w:140,h:52},{x:480,y:130,w:140,h:52},{x:480,y:570,w:140,h:52}];score=0;kills=0;wave=1;spawnClock=0;fireClock=0;playing=true;menu.style.display='none';for(let i=0;i<9;i++)spawnBot()}
-function spawnBot(){let a=rand(0,Math.PI*2),d=rand(270,490);bots.push({x:clamp(hero.x+Math.cos(a)*d,40,worldW-40),y:clamp(hero.y+Math.sin(a)*d,40,worldH-40),r:20,hp:55+wave*8,max:55+wave*8,shoot:rand(.5,2),speed:65+wave*4,side:Math.random()<.5?1:-1,elite:wave>=3&&Math.random()<.16})}
+function reset(){selectedFighter=Number(localStorage.getItem('clashLegendsFighter')||0);hero={x:worldW/2,y:worldH/2,r:22,hp:100,max:100,speed:245+(selectedFighter===3?35:0),super:0,inv:0,cubes:0};bots=[];shots=[];particles=[];drops=[];crates=[];combo=0;comboClock=0;sessionCoins=0;sessionTrophies=0;stormTime=0;matchDone=false;showdownKills=0;walls=[{x:220,y:165,w:140,h:52},{x:740,y:165,w:140,h:52},{x:220,y:530,w:140,h:52},{x:740,y:530,w:140,h:52},{x:480,y:130,w:140,h:52},{x:480,y:570,w:140,h:52}];score=0;kills=0;wave=1;spawnClock=0;fireClock=0;playing=true;menu.style.display='none';for(let i=0;i<9;i++)spawnBot();for(let i=0;i<12;i++){let p={x:rand(60,worldW-60),y:rand(60,worldH-60),r:20,hp:70,max:70};if(!hitWall(p)&&dist(p,hero)>85)crates.push(p)}}
+function spawnBot(){let a=rand(0,Math.PI*2),d=rand(270,490);bots.push({x:clamp(hero.x+Math.cos(a)*d,40,worldW-40),y:clamp(hero.y+Math.sin(a)*d,40,worldH-40),r:20,hp:65,max:65,shoot:rand(.5,2),speed:95,side:Math.random()<.5?1:-1,elite:wave>=3&&Math.random()<.16})}
 function hitWall(o){return walls.some(q=>o.x+o.r>q.x&&o.x-o.r<q.x+q.w&&o.y+o.r>q.y&&o.y-o.r<q.y+q.h)}
 function move(o,dx,dy){let ox=o.x;o.x=clamp(o.x+dx,o.r,worldW-o.r);if(hitWall(o))o.x=ox;let oy=o.y;o.y=clamp(o.y+dy,o.r,worldH-o.r);if(hitWall(o))o.y=oy}
-function shoot(o,angle,enemy=false,power=1){const spread=!enemy&&selectedFighter===1?[-.13,0,.13]:[0];for(const offset of spread){let a=angle+offset;shots.push({x:o.x+Math.cos(a)*28,y:o.y+Math.sin(a)*28,vx:Math.cos(a)*(enemy?330:560),vy:Math.sin(a)*(enemy?330:560),r:enemy?7:8,damage:enemy?10:(selectedFighter===1?12:25)*(selectedFighter===2?1.15:1)*power,life:1.8,enemy})}}
+function shoot(o,angle,enemy=false,power=1){const spread=!enemy&&selectedFighter===1?[-.13,0,.13]:[0];for(const offset of spread){let a=angle+offset;shots.push({x:o.x+Math.cos(a)*28,y:o.y+Math.sin(a)*28,vx:Math.cos(a)*(enemy?330:560),vy:Math.sin(a)*(enemy?330:560),r:enemy?7:8,damage:enemy?10:(selectedFighter===1?12:25)*(1+hero.cubes*.14)*(selectedFighter===2?1.15:1)*power,life:1.8,enemy,owner:enemy?o:null})}}
 function burst(px,py,color,n=12){for(let i=0;i<n;i++){let a=rand(0,Math.PI*2),v=rand(30,180);particles.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rand(.2,.6),color})}}
 function aim(){if(touchFire){return Math.atan2(touchAim.y,touchAim.x)}let rect=c.getBoundingClientRect(),sx=(mouse.x*devicePixelRatio-(w-worldW*scale)/2)/scale,sy=(mouse.y*devicePixelRatio-(h-worldH*scale)/2)/scale;return Math.atan2(sy-hero.y,sx-hero.x)}
-function superAttack(){if(!playing||hero.super<100)return;hero.super=0;if(selectedFighter===2){hero.hp=Math.min(100,hero.hp+55);hero.inv=1.3;burst(hero.x,hero.y,'#65ff96',35)}else if(selectedFighter===3){for(let b of bots){if(dist(hero,b)<260){b.hp-=85;burst(b.x,b.y,'#e3a1ff',15)}}burst(hero.x,hero.y,'#c576ff',35)}else{for(let i=0;i<18;i++)shoot(hero,i*Math.PI/9,false,selectedFighter===1?2:1.7);burst(hero.x,hero.y,'#ffdb39',30)}}
-function update(dt){if(!playing)return;stormTime+=dt;const stormMargin=Math.min(350,Math.max(0,stormTime-12)*2.25);hero.inv=Math.max(0,hero.inv-dt);fireClock-=dt;comboClock-=dt;if(comboClock<=0)combo=0;let dx=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0)+touchMove.x,dy=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0)+touchMove.y;let mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag}move(hero,dx*hero.speed*dt,dy*hero.speed*dt);if((mouse.down||touchFire)&&fireClock<=0){shoot(hero,aim());fireClock=.23}
-for(let b of bots){let d=dist(b,hero),a=Math.atan2(hero.y-b.y,hero.x-b.x);if(d>170)move(b,Math.cos(a)*b.speed*dt,Math.sin(a)*b.speed*dt);else if(d<125)move(b,-Math.cos(a)*b.speed*.5*dt,-Math.sin(a)*b.speed*.5*dt);else move(b,-Math.sin(a)*b.side*b.speed*.5*dt,Math.cos(a)*b.side*b.speed*.5*dt);b.shoot-=dt;if(b.shoot<=0&&d<540){shoot(b,a+rand(-.14,.14),true);b.shoot=rand(1.15,2.1)}if(b.x<stormMargin||b.y<stormMargin||b.x>worldW-stormMargin||b.y>worldH-stormMargin)b.hp-=15*dt}
-for(let s of shots){s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.x<0||s.y<0||s.x>worldW||s.y>worldH||hitWall(s)){s.life=0;continue}if(s.enemy){if(dist(s,hero)<s.r+hero.r&&hero.inv<=0){hero.hp-=s.damage;hero.inv=.2;s.life=0;burst(s.x,s.y,'#ff6979',5)}}else{for(let b of bots){if(b.hp>0&&dist(s,b)<s.r+b.r){b.hp-=s.damage;s.life=0;burst(s.x,s.y,'#ffd05c',6);if(b.hp<=0){kills++;showdownKills++;combo++;comboClock=5;score+=100+Math.min(combo,10)*25;hero.super=Math.min(100,hero.super+18);drops.push({x:b.x,y:b.y,r:13,kind:Math.random()<.25?'heal':'coin',life:18});burst(b.x,b.y,'#b36dff',18)}break}}}}
-shots=shots.filter(s=>s.life>0);bots=bots.filter(b=>b.hp>0);for(let d of drops){d.life-=dt;if(dist(d,hero)<hero.r+22){if(d.kind==='heal')hero.hp=Math.min(100,hero.hp+18);else{sessionCoins+=5;score+=25}d.life=0;burst(d.x,d.y,d.kind==='heal'?'#76ff9b':'#ffe45d',9)}}drops=drops.filter(d=>d.life>0);for(let p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);
+function superAttack(){if(!playing||hero.super<100)return;hero.super=0;if(selectedFighter===2){hero.hp=Math.min(hero.max,hero.hp+55);hero.inv=1.3;burst(hero.x,hero.y,'#65ff96',35)}else if(selectedFighter===3){for(let b of bots){if(dist(hero,b)<260){b.hp-=85;burst(b.x,b.y,'#e3a1ff',15)}}burst(hero.x,hero.y,'#c576ff',35)}else{for(let i=0;i<18;i++)shoot(hero,i*Math.PI/9,false,selectedFighter===1?2:1.7);burst(hero.x,hero.y,'#ffdb39',30)}}
+function update(dt){
+if(!playing)return;
+stormTime+=dt;const stormMargin=Math.min(335,Math.max(0,stormTime-10)*2.7);
+hero.inv=Math.max(0,hero.inv-dt);fireClock-=dt;comboClock-=dt;if(comboClock<=0)combo=0;
+let dx=(keys.d||keys.ArrowRight?1:0)-(keys.a||keys.ArrowLeft?1:0)+touchMove.x,dy=(keys.s||keys.ArrowDown?1:0)-(keys.w||keys.ArrowUp?1:0)+touchMove.y;
+let mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag}move(hero,dx*hero.speed*dt,dy*hero.speed*dt);
+if((mouse.down||touchFire)&&fireClock<=0){shoot(hero,aim());fireClock=.23}
+for(const b of bots){
+if(b.hp<=0)continue;
+const candidates=[hero,...bots.filter(other=>other!==b&&other.hp>0)];
+let target=candidates.reduce((best,v)=>dist(b,v)<dist(b,best)?v:best,candidates[0]);
+const d=dist(b,target),a=Math.atan2(target.y-b.y,target.x-b.x);
+if(d>190)move(b,Math.cos(a)*b.speed*dt,Math.sin(a)*b.speed*dt);
+else if(d<105)move(b,-Math.cos(a)*b.speed*.55*dt,-Math.sin(a)*b.speed*.55*dt);
+else move(b,-Math.sin(a)*b.side*b.speed*.6*dt,Math.cos(a)*b.side*b.speed*.6*dt);
+b.shoot-=dt;
+if(b.shoot<=0&&d<490){shoot(b,a+rand(-.16,.16),true);b.shoot=rand(1.1,2.1)}
+if(b.x<stormMargin||b.y<stormMargin||b.x>worldW-stormMargin||b.y>worldH-stormMargin)b.hp-=18*dt;
+}
+for(const shot of shots){
+shot.x+=shot.vx*dt;shot.y+=shot.vy*dt;shot.life-=dt;
+if(shot.x<0||shot.y<0||shot.x>worldW||shot.y>worldH||hitWall(shot)){shot.life=0;continue}
+for(const crate of crates){if(crate.hp>0&&dist(shot,crate)<shot.r+crate.r){crate.hp-=shot.damage;shot.life=0;burst(shot.x,shot.y,'#ffe58a',5);if(crate.hp<=0){drops.push({x:crate.x,y:crate.y,r:13,kind:'cube',life:35});burst(crate.x,crate.y,'#b3ff72',18)}break}}
+if(shot.life<=0)continue;
+if(shot.enemy){
+if(dist(shot,hero)<shot.r+hero.r&&hero.inv<=0){hero.hp-=shot.damage;hero.inv=.18;shot.life=0;burst(shot.x,shot.y,'#ff6979',5)}
+if(shot.life>0)for(const b of bots){if(b!==shot.owner&&b.hp>0&&dist(shot,b)<shot.r+b.r){b.hp-=shot.damage;shot.life=0;burst(shot.x,shot.y,'#ff9a6e',5);break}}
+}else{
+for(const b of bots){if(b.hp>0&&dist(shot,b)<shot.r+b.r){b.hp-=shot.damage;shot.life=0;burst(shot.x,shot.y,'#ffd05c',6);if(b.hp<=0){kills++;showdownKills++;combo++;comboClock=5;score+=100+Math.min(combo,10)*25;hero.super=Math.min(100,hero.super+18)}break}}
+}
+}
+shots=shots.filter(shot=>shot.life>0);
+for(const b of bots){if(b.hp<=0&&!b.rewarded){b.rewarded=true;drops.push({x:b.x,y:b.y,r:13,kind:'cube',life:30});burst(b.x,b.y,'#b36dff',18)}}
+bots=bots.filter(b=>b.hp>0);
+for(const d of drops){d.life-=dt;if(dist(d,hero)<hero.r+23){if(d.kind==='cube'){hero.cubes++;hero.max+=12;hero.hp=Math.min(hero.max,hero.hp+20);sessionCoins+=3}else if(d.kind==='heal')hero.hp=Math.min(hero.max,hero.hp+18);else{sessionCoins+=5;score+=25}d.life=0;burst(d.x,d.y,d.kind==='cube'?'#acff74':'#ffe45d',9)}}
+drops=drops.filter(d=>d.life>0);
+for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt}particles=particles.filter(p=>p.life>0);
 if(hero.x<stormMargin||hero.y<stormMargin||hero.x>worldW-stormMargin||hero.y>worldH-stormMargin)hero.hp-=22*dt;
-if(bots.length===0||hero.hp<=0){playing=false;let victory=hero.hp>0;sessionTrophies=victory?10:Math.max(0,showdownKills-2);sessionCoins+=victory?50:showdownKills*5;localStorage.setItem('clashLegendsTrophies',Number(localStorage.getItem('clashLegendsTrophies')||0)+sessionTrophies);localStorage.setItem('clashLegendsCoins',Number(localStorage.getItem('clashLegendsCoins')||0)+sessionCoins);menu.style.display='flex';document.querySelector('#panel').innerHTML='<h1>'+(victory?'🏆 SHOWDOWN VICTORY!':'💀 ELIMINATED')+'</h1><p>🎯 Eliminations: '+showdownKills+'</p><p>🏆 +'+sessionTrophies+' trophies · 🪙 +'+sessionCoins+' coins</p><button id="again">BACK TO LOBBY</button>';document.querySelector('#again').onclick=()=>location.reload()}
-hpEl.textContent='❤️ '+Math.max(0,Math.ceil(hero.hp))+'   ⚡ '+Math.floor(hero.super)+'%';scoreEl.textContent='⭐ '+score+'   💀 '+kills+'   🪙 '+sessionCoins;waveEl.textContent='ALIVE '+(bots.length+1)+'/10 · STORM '+Math.floor(stormMargin);
+if(bots.length===0||hero.hp<=0){
+playing=false;const victory=hero.hp>0,placement=victory?1:Math.min(10,bots.length+1);
+sessionTrophies=victory?10:Math.max(0,8-placement);sessionCoins+=victory?50:Math.max(0,10-placement)*5;
+localStorage.setItem('clashLegendsTrophies',Number(localStorage.getItem('clashLegendsTrophies')||0)+sessionTrophies);
+localStorage.setItem('clashLegendsCoins',Number(localStorage.getItem('clashLegendsCoins')||0)+sessionCoins);
+localStorage.setItem('clashLegendsMatches',Number(localStorage.getItem('clashLegendsMatches')||0)+1);
+if(victory)localStorage.setItem('clashLegendsWins',Number(localStorage.getItem('clashLegendsWins')||0)+1);
+menu.style.display='flex';
+document.querySelector('#panel').innerHTML='<h1>'+(victory?'🏆 SHOWDOWN VICTORY!':'💀 ELIMINATED')+'</h1><p>PLACEMENT #'+placement+' / 10 · 🎯 '+showdownKills+' KOs · 💚 '+hero.cubes+' cubes</p><p>🏆 +'+sessionTrophies+' trophies · 🪙 +'+sessionCoins+' coins</p><button id="again">BACK TO LOBBY</button>';
+document.querySelector('#again').onclick=()=>location.reload();
+}
+hpEl.textContent='❤️ '+Math.max(0,Math.ceil(hero.hp))+'/'+hero.max+'   ⚡ '+Math.floor(hero.super)+'%   💚 '+hero.cubes;
+scoreEl.textContent='⭐ '+score+'   💀 '+kills+'   🪙 '+sessionCoins;
+waveEl.textContent='ALIVE '+(bots.length+(hero.hp>0?1:0))+'/10 · STORM '+Math.floor(stormMargin);
 }
 function roundRect(px,py,pw,ph,r,color){x.fillStyle=color;x.beginPath();x.roundRect(px,py,pw,ph,r);x.fill()}
-function draw(){x.clearRect(0,0,w,h);x.fillStyle='#11142b';x.fillRect(0,0,w,h);x.save();x.translate((w-worldW*scale)/2,(h-worldH*scale)/2);x.scale(scale,scale);x.fillStyle='#70c96c';x.fillRect(0,0,worldW,worldH);let sm=Math.min(350,Math.max(0,stormTime-12)*2.25);if(sm>0){x.fillStyle='#a53fb878';x.fillRect(0,0,worldW,sm);x.fillRect(0,worldH-sm,worldW,sm);x.fillRect(0,sm,sm,worldH-2*sm);x.fillRect(worldW-sm,sm,sm,worldH-2*sm);x.strokeStyle='#d35aff';x.lineWidth=5;x.strokeRect(sm,sm,worldW-2*sm,worldH-2*sm)}x.strokeStyle='#ffffff17';x.lineWidth=2;for(let i=0;i<worldW;i+=50){x.beginPath();x.moveTo(i,0);x.lineTo(i,worldH);x.stroke()}for(let i=0;i<worldH;i+=50){x.beginPath();x.moveTo(0,i);x.lineTo(worldW,i);x.stroke()}x.strokeStyle='#397d46';x.lineWidth=16;x.strokeRect(8,8,worldW-16,worldH-16);
+function draw(){x.clearRect(0,0,w,h);x.fillStyle='#11142b';x.fillRect(0,0,w,h);x.save();x.translate((w-worldW*scale)/2,(h-worldH*scale)/2);x.scale(scale,scale);x.fillStyle='#70c96c';x.fillRect(0,0,worldW,worldH);let sm=Math.min(335,Math.max(0,stormTime-10)*2.7);if(sm>0){x.fillStyle='#a53fb878';x.fillRect(0,0,worldW,sm);x.fillRect(0,worldH-sm,worldW,sm);x.fillRect(0,sm,sm,worldH-2*sm);x.fillRect(worldW-sm,sm,sm,worldH-2*sm);x.strokeStyle='#d35aff';x.lineWidth=5;x.strokeRect(sm,sm,worldW-2*sm,worldH-2*sm)}x.strokeStyle='#ffffff17';x.lineWidth=2;for(let i=0;i<worldW;i+=50){x.beginPath();x.moveTo(i,0);x.lineTo(i,worldH);x.stroke()}for(let i=0;i<worldH;i+=50){x.beginPath();x.moveTo(0,i);x.lineTo(worldW,i);x.stroke()}x.strokeStyle='#397d46';x.lineWidth=16;x.strokeRect(8,8,worldW-16,worldH-16);
 for(let q of walls){roundRect(q.x+4,q.y+8,q.w,q.h,9,'#6b433e');roundRect(q.x,q.y,q.w,q.h,9,'#b57651');roundRect(q.x+5,q.y+5,q.w-10,12,4,'#dc9e6b')}
-for(let d of drops){x.fillStyle=d.kind==='heal'?'#6cf7a1':'#ffd447';x.beginPath();x.arc(d.x,d.y,d.r+Math.sin(performance.now()/160)*2,0,Math.PI*2);x.fill();x.fillStyle='#273f47';x.font='bold 18px system-ui';x.textAlign='center';x.fillText(d.kind==='heal'?'+':'
+for(let crate of crates){if(crate.hp<=0)continue;roundRect(crate.x-19,crate.y-19,38,38,7,'#754d2c');roundRect(crate.x-15,crate.y-15,30,30,5,'#c18b49');x.fillStyle='#ffe9a2';x.fillRect(crate.x-3,crate.y-15,6,30);x.fillRect(crate.x-15,crate.y-3,30,6)}for(let d of drops){x.fillStyle=d.kind==='cube'?'#8bff5a':d.kind==='heal'?'#6cf7a1':'#ffd447';x.beginPath();x.arc(d.x,d.y,d.r+Math.sin(performance.now()/160)*2,0,Math.PI*2);x.fill();x.fillStyle='#273f47';x.font='bold 18px system-ui';x.textAlign='center';x.fillText(d.kind==='heal'?'+':'
 for(let b of bots){x.fillStyle='#5b215f';x.beginPath();x.arc(b.x+3,b.y+6,b.r+3,0,7);x.fill();x.fillStyle=b.elite?'#ffbb42':'#f15e9a';x.beginPath();x.arc(b.x,b.y,b.r,0,7);x.fill();x.fillStyle='#fff';x.fillRect(b.x-9,b.y-7,6,7);x.fillRect(b.x+4,b.y-7,6,7);roundRect(b.x-22,b.y-35,44,6,3,'#571e31');roundRect(b.x-22,b.y-35,44*Math.max(0,b.hp/b.max),6,3,'#ff6b76')}
 if(hero){x.fillStyle='#203f9b';x.beginPath();x.arc(hero.x+3,hero.y+6,hero.r+3,0,7);x.fill();x.fillStyle=hero.inv>0?'#a8f7ff':heroColors[selectedFighter]||'#318cf5';x.beginPath();x.arc(hero.x,hero.y,hero.r,0,7);x.fill();x.save();x.translate(hero.x,hero.y);x.rotate(aim());roundRect(12,-7,24,14,5,'#263b73');x.restore();x.fillStyle='#fff';x.beginPath();x.arc(hero.x-7,hero.y-5,4,0,7);x.arc(hero.x+7,hero.y-5,4,0,7);x.fill();roundRect(hero.x-26,hero.y-40,52,8,4,'#234b39');roundRect(hero.x-26,hero.y-40,52*Math.max(0,hero.hp/100),8,4,'#69f3a3')}
 for(let p of particles){x.globalAlpha=Math.min(1,p.life*3);x.fillStyle=p.color;x.fillRect(p.x-3,p.y-3,6,6)}x.globalAlpha=1;x.restore()}
@@ -78,7 +123,7 @@ const fire=document.querySelector('#fire');fire.addEventListener('pointerdown',e
 (()=>{'use strict';
 const fighters=[{name:'BOLT',color:'#38b6ff',dark:'#236bc2',sub:'⚡ STARTER FIGHTER · POWER 1'},{name:'EMBER',color:'#ff9852',dark:'#cf4839',sub:'🔥 FIRE SPECIALIST · POWER 1'},{name:'MOSS',color:'#8fe36a',dark:'#3d9b56',sub:'🌿 NATURE GUARDIAN · POWER 1'},{name:'VIOLET',color:'#dc88fa',dark:'#7846bd',sub:'💜 SHADOW STRIKER · POWER 1'}];
 const modes=[['🌪️','SOLO SHOWDOWN','10 fighters · Last one standing · Bots',true],['🤝','DUO SHOWDOWN','Coming soon',false],['💀','KNOCKOUT','3v3 elimination · Coming soon',false],['🏆','RANKED','Competitive online · Coming soon',false]];
-let selected=0;const popup=document.querySelector('#lobbyPopup'),options=document.querySelector('#popupOptions'),title=document.querySelector('#popupTitle');
+let selected=Number(localStorage.getItem('clashLegendsFighter')||0);const initial=fighters[selected]||fighters[0];document.querySelector('#fighterName').textContent=initial.name;document.querySelector('#fighterSubtitle').textContent=initial.sub;document.querySelector('#fighterArt').style.setProperty('--fighter',initial.color);document.querySelector('#fighterArt').style.setProperty('--fighter-dark',initial.dark);const popup=document.querySelector('#lobbyPopup'),options=document.querySelector('#popupOptions'),title=document.querySelector('#popupTitle');
 function show(name,entries){title.textContent=name;options.innerHTML='';entries.forEach(entry=>{let b=document.createElement('button');b.textContent=entry.label;b.className=entry.selected?'selected':'';b.onclick=entry.action;options.appendChild(b)});popup.style.display='flex'}
 function close(){popup.style.display='none'}document.querySelector('#popupClose').onclick=close;popup.addEventListener('click',e=>{if(e.target===popup)close()});
 document.querySelector('#fightersBtn').onclick=()=>show('CHOOSE FIGHTER',fighters.map((f,i)=>({label:(i===selected?'✓ ':'')+f.name,selected:i===selected,action:()=>{selected=i;localStorage.setItem('clashLegendsFighter',i);document.querySelector('#fighterName').textContent=f.name;document.querySelector('#fighterSubtitle').textContent=f.sub;document.querySelector('#fighterArt').style.setProperty('--fighter',f.color);document.querySelector('#fighterArt').style.setProperty('--fighter-dark',f.dark);close()}})));
@@ -86,7 +131,7 @@ function chooseMode(){show('GAME MODES',modes.map(m=>({label:m[0]+' '+m[1]+(m[3]
 document.querySelector('#modesBtn').onclick=chooseMode;document.querySelector('#modeCard').onclick=chooseMode;document.querySelector('#modeCard').onkeydown=e=>{if(e.key==='Enter')chooseMode()};
 function coming(name){show(name,[{label:'This feature is being built. Practice Arena is playable now.',action:close}])}
 document.querySelector('#shopBtn').onclick=()=>coming('SHOP');document.querySelector('#questsBtn').onclick=()=>coming('QUESTS');document.querySelector('#rankedBtn').onclick=()=>coming('RANKED');document.querySelector('#friendsBtn').onclick=()=>coming('FRIENDS');
-document.querySelector('#lobbyTrophies').textContent='🏆 '+Number(localStorage.getItem('clashLegendsTrophies')||0);document.querySelector('#lobbyCoins').textContent='🪙 '+Number(localStorage.getItem('clashLegendsCoins')||0);
+document.querySelector('#questsBtn').textContent='📊 STATS';document.querySelector('#questsBtn').onclick=()=>show('YOUR SHOWDOWN STATS',[{label:'🏆 Wins: '+(localStorage.getItem('clashLegendsWins')||0),action:close},{label:'🎮 Matches: '+(localStorage.getItem('clashLegendsMatches')||0),action:close}]);document.querySelector('#lobbyTrophies').textContent='🏆 '+Number(localStorage.getItem('clashLegendsTrophies')||0);document.querySelector('#lobbyCoins').textContent='🪙 '+Number(localStorage.getItem('clashLegendsCoins')||0);
 })();
 </script></body></html>,d.x,d.y+6)}for(let s of shots){x.fillStyle=s.enemy?'#ff5367':'#ffe64a';x.beginPath();x.arc(s.x,s.y,s.r,0,Math.PI*2);x.fill()}
 for(let b of bots){x.fillStyle='#5b215f';x.beginPath();x.arc(b.x+3,b.y+6,b.r+3,0,7);x.fill();x.fillStyle='#f15e9a';x.beginPath();x.arc(b.x,b.y,b.r,0,7);x.fill();x.fillStyle='#fff';x.fillRect(b.x-9,b.y-7,6,7);x.fillRect(b.x+4,b.y-7,6,7);roundRect(b.x-22,b.y-35,44,6,3,'#571e31');roundRect(b.x-22,b.y-35,44*Math.max(0,b.hp/b.max),6,3,'#ff6b76')}
