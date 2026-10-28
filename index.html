@@ -502,13 +502,18 @@ function build3(){
  }
  // Dense dark foliage under bright tufted crowns; no hundreds of per-frame allocations.
  const bushColors=[0x1d5a32,0x2a7139,0x378c44,0x45a252,0x5cae5c];
+ g.bushViews=[];
  for(const b of bushes){
-  mesh3(g.fixed,g.bx,g.mat(0x17452a),b.x+b.w/2,9,b.y+b.h/2,b.w,17,b.h);
+  const group=new T.Group();g.fixed.add(group);
+  const colors=[0x17452a,...bushColors,0x6ac66b];
+  const materials=colors.map(color=>new T.MeshStandardMaterial({color,flatShading:true,roughness:.95,transparent:true,opacity:1,depthWrite:true}));
+  group.userData={cover:b,materials,inside:false};g.bushViews.push(group);
+  mesh3(group,g.bx,materials[0],b.x+b.w/2,9,b.y+b.h/2,b.w,17,b.h);
   for(let z=b.y+12;z<b.y+b.h;z+=29)for(let xx=b.x+12;xx<b.x+b.w;xx+=28){
    const hash=(Math.sin(xx*12.9898+z*78.233)*43758.5453)%1;
    const x=xx+hash*5,zz=z+Math.cos(xx+z)*4,idx=Math.abs(Math.floor(hash*17))%5;
-   mesh3(g.fixed,g.round,g.mat(bushColors[idx]),x,21,zz,19,16,20);
-   if((xx+z)%3<1.5)mesh3(g.fixed,g.round,g.mat(0x6ac66b),x-5,31,zz-7,8,5,9);
+   mesh3(group,g.round,materials[1+idx],x,21,zz,19,16,20);
+   if((xx+z)%3<1.5)mesh3(group,g.round,materials[6],x-5,31,zz-7,8,5,9);
   }
  }
  // Reusable small rocks and cacti create landmarks beyond plain walls.
@@ -602,6 +607,13 @@ function render3(){
  init3();if(!gfx3||!hero)return false;
  const g=gfx3,T=g.T;
  if(!g.ready)build3();
+ // Thin out the foliage you're standing in, while keeping other bushes fully opaque.
+ for(const patch of g.bushViews||[]){
+  const inside=bushAt(hero)===patch.userData.cover;
+  if(inside===patch.userData.inside)continue;
+  patch.userData.inside=inside;
+  for(const mat of patch.userData.materials){mat.opacity=inside?.35:1;mat.depthWrite=!inside}
+ }
  // Reuse meshes on every frame; creating geometry per frame previously leaked GPU memory.
  const alive=new Set([hero,...bots]);
  for(const m of g.unitViews)m.visible=false;
@@ -720,7 +732,7 @@ function setPause(value){if(!playing)return;paused=!!value;pauseOverlay.hidden=!
 pauseBtn.addEventListener('click',()=>setPause(!paused));document.querySelector('#resumeBtn').onclick=()=>setPause(false);
 document.querySelector('#surrenderBtn').onclick=()=>{paused=false;pauseOverlay.hidden=true;introStage=0;introPanel.style.display='none';hero.hp=0};
 addEventListener('keydown',e=>{if(e.key==='Escape'&&playing){e.preventDefault();setPause(!paused)}});
-if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).has('e2e'))window.__clashTest={skipIntro:()=>{introStage=0;introPanel.style.display='none'},forceWin:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';bots=[];hero.hp=Math.max(1,hero.hp)},forceLose:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';hero.hp=0},triggerSuper:()=>{if(hero&&playing){introStage=0;introPanel.style.display='none';hero.super=100;superAttack()}},snapshot:()=>({playing,introStage,ammo,selectedFighter,alive:bots.length,friendly:bots.filter(b=>b.friendly).length,friendHP:bots.find(b=>b.friendly)?.hp??null,heroHP:hero&&hero.hp,graphics:!!gfx3,mode:localStorage.getItem('clashGameMode')||'showdown'})};
+if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSearchParams(location.search).has('e2e'))window.__clashTest={skipIntro:()=>{introStage=0;introPanel.style.display='none'},forceWin:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';bots=[];hero.hp=Math.max(1,hero.hp)},forceLose:()=>{if(!hero||!playing)return;introStage=0;introPanel.style.display='none';hero.hp=0},triggerSuper:()=>{if(hero&&playing){introStage=0;introPanel.style.display='none';hero.super=100;superAttack()}},bushProbe:()=>{if(!hero||!bots.length)return null;const patch=bushes[0],b=bots.find(x=>!x.friendly);if(!b)return null;const h={x:hero.x,y:hero.y,lastShot:hero.lastShot},q={x:b.x,y:b.y,lastShot:b.lastShot};hero.x=patch.x+patch.w/2;hero.y=patch.y+patch.h/2;hero.lastShot=0;b.x=patch.x+patch.w+350;b.y=hero.y;b.lastShot=0;const hidden=concealedFrom(b,hero),revealedClose=concealedFrom({x:hero.x+80,y:hero.y},hero);hero.lastShot=performance.now();const revealedAfterShot=concealedFrom(b,hero);Object.assign(hero,h);Object.assign(b,q);return {hidden,revealedClose,revealedAfterShot}},snapshot:()=>({playing,introStage,ammo,selectedFighter,alive:bots.length,friendly:bots.filter(b=>b.friendly).length,friendHP:bots.find(b=>b.friendly)?.hp??null,heroHP:hero&&hero.hp,graphics:!!gfx3,mode:localStorage.getItem('clashGameMode')||'showdown'})};
 })();
 </script>
 <script>
