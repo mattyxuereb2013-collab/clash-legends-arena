@@ -311,7 +311,7 @@ function hitWall(o){return walls.some(q=>o.x+o.r>q.x&&o.x-o.r<q.x+q.w&&o.y+o.r>q
 function blocked(o){return hitWall(o)||crates.some(q=>q.hp>0&&Math.hypot(o.x-q.x,o.y-q.y)<o.r+q.r+2)}
 function inBush(o){return bushes.some(b=>o.x>b.x&&o.x<b.x+b.w&&o.y>b.y&&o.y<b.y+b.h)}
 function move(o,dx,dy){let ox=o.x;o.x=clamp(o.x+dx,o.r,worldW-o.r);if(blocked(o))o.x=ox;let oy=o.y;o.y=clamp(o.y+dy,o.r,worldH-o.r);if(blocked(o))o.y=oy}
-function shoot(o,angle,enemy=false,power=1){let k=enemy?(o.style||0)%8:selectedFighter,level=1+hero.cubes*.14,patterns=enemy?[[0]]:[[0],[-.18,0,.18],[-.08,.08],[-.28,-.14,0,.14,.28],[0],[-.12,0,.12],[-.22,0,.22],[-.07,.07]],offsets=patterns[k]||[0];if(!enemy)o.lastShot=performance.now();for(let offset of offsets){let a=angle+offset,speed=enemy?330:[620,480,700,390,530,740,420,590][k],damage=enemy?10:[27,12,22,9,30,17,14,25][k]*(1+4*(fighterLevel()-1)/25)*level*power;shots.push({x:o.x+Math.cos(a)*28,y:o.y+Math.sin(a)*28,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:enemy?7:[8,7,10,6,12,6,8,11][k],damage,life:enemy?1.8:[1.25,.7,1.65,.85,1.35,1.8,.95,1.4][k],enemy,owner:enemy?o:null,team:enemy?(o.team===undefined?-1:o.team):0,kind:enemy?-1:k,bounces:enemy?0:k===5?2:0,trail:[],color:enemy?'#ff697f':["#38b6ff","#ff9852","#8fe36a","#dc88fa","#7ce8ff","#ffd064","#ff7ab5","#c49a70"][k]})}}
+function shoot(o,angle,enemy=false,power=1){let k=enemy?(o.style||0)%8:selectedFighter,level=1+hero.cubes*.14,patterns=enemy?[[0]]:[[0],[-.18,0,.18],[-.08,.08],[-.28,-.14,0,.14,.28],[0],[-.12,0,.12],[-.22,0,.22],[-.07,.07]],offsets=patterns[k]||[0];if(!enemy)o.lastShot=performance.now();for(let offset of offsets){let a=angle+offset,speed=enemy?330:[620,480,700,390,530,740,420,590][k],damage=enemy?10:[27,12,22,9,30,17,14,25][k]*(1+4*(fighterLevel()-1)/25)*level*power;shots.push({x:o.x+Math.cos(a)*28,y:o.y+Math.sin(a)*28,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:enemy?7:[8,7,10,6,12,6,8,11][k],damage,life:enemy?1.8:[1.25,.7,1.65,.85,1.35,1.8,.95,1.4][k],enemy,owner:enemy?o:null,team:enemy?(o.team===undefined?-1:o.team):0,kind:enemy?-1:k,bounces:enemy?0:k===5?2:0,trail:[],color:enemy?(o.team===0?'#73e9ff':'#ff697f'):["#38b6ff","#ff9852","#8fe36a","#dc88fa","#7ce8ff","#ffd064","#ff7ab5","#c49a70"][k]})}}
 function burst(px,py,color,n=12){for(let i=0;i<n;i++){let a=rand(0,Math.PI*2),v=rand(30,180);particles.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rand(.2,.6),color})}}
 function aim(){if(touchFire){return Math.atan2(touchAim.y,touchAim.x)}if(gfx3&&gfx3.ready&&gfx3.camera&&mouse.x>0){const T=gfx3.T;gfx3.ray.setFromCamera(new T.Vector2(mouse.x/Math.max(1,innerWidth)*2-1,1-mouse.y/Math.max(1,innerHeight)*2),gfx3.camera);if(gfx3.ray.ray.intersectPlane(gfx3.aimPlane,gfx3.mouseHit))return Math.atan2(gfx3.mouseHit.z-hero.y,gfx3.mouseHit.x-hero.x)}let sx=mouse.x*devicePixelRatio/scale+cameraX,sy=mouse.y*devicePixelRatio/scale+cameraY;return Math.atan2(sy-hero.y,sx-hero.x)}
 function superAttack(){
@@ -585,7 +585,7 @@ function render3(){
   const p=shots[i];let m=g.shotViews[i];
   if(!m){m=mesh3(g.moving,g.shotGeo,g.mat(0xffe17c,0xffab24),0,0,0);g.shotViews.push(m)}
   m.visible=true;m.position.set(p.x,39,p.y);m.scale.set(p.r,p.r,p.r);
-  m.material=g.mat(p.enemy?0xff5e77:0xffe17c,p.enemy?0xba254f:0xeaa631);
+  m.material=g.mat(p.team===0?0x78e5ff:p.enemy?0xff5e77:0xffe17c,p.team===0?0x368dc7:p.enemy?0xba254f:0xeaa631);
  }
  for(let i=shots.length;i<g.shotViews.length;i++)g.shotViews[i].visible=false;
  for(let i=0;i<drops.length;i++){
