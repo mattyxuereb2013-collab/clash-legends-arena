@@ -1165,6 +1165,7 @@ async function decide(id,status){
 /* Public-code, unranked two-person duel. Uses Realtime broadcast for movement
    and presence only for join/leave; competitive trophies are never awarded. */
 let duelChannel=null,duelStarted=false,duelPeer='',duelId='';
+let queueChannel=null;
 const codeAlphabet='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function randomRoomCode(){
  const bytes=new Uint8Array(8);crypto.getRandomValues(bytes);
@@ -1177,6 +1178,7 @@ async function leaveDuelRoom(){
 }
 function duelMenu(){
  view('🌐 ONLINE 1V1 · BETA',[
+  {label:'⚡ QUICK MATCH · FIND A RIVAL',action:matchmakeDuel},
   {label:'⚔️ CREATE PRIVATE ROOM',action:()=>connectDuel(randomRoomCode(),'host')},
   {label:'🔑 JOIN WITH ROOM CODE',action:joinDuelForm},
   {label:'TWO PLAYERS · NO BOTS · NO TROPHIES',disabled:true},
@@ -1191,6 +1193,67 @@ function joinDuelForm(){
  const join=document.createElement('button');join.type='button';join.textContent='JOIN ROOM';options.appendChild(join);
  join.onclick=()=>{const code=input.value.trim().toUpperCase();if(!/^[A-HJ-NP-Z2-9]{8}$/.test(code)){notice('INVALID 8-CHARACTER ROOM CODE',joinDuelForm);return}connectDuel(code,'guest')};
  const back=document.createElement('button');back.type='button';back.textContent='◀ BACK';back.onclick=duelMenu;options.appendChild(back)
+}
+
+async function cancelMatchQueue(){
+ const ch=queueChannel;queueChannel=null;
+ if(ch&&api)try{await api.removeChannel(ch)}catch(e){console.warn('Queue cleanup failed',e)}
+}
+async function pairCode(first,second){
+ const ordered=[first,second].sort().join(':');
+ const hash=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(ordered));
+ return Array.from(new Uint8Array(hash).slice(0,8),b=>codeAlphabet[b%32]).join('')
+}
+async function matchmakeDuel(){
+ if(!api?.channel){notice('REALTIME MATCHMAKING UNAVAILABLE',duelMenu);return}
+ await cancelMatchQueue();await leaveDuelRoom();
+ const myId=crypto.randomUUID();
+ const channel=api.channel('clash-queue-practice-v1',{config:{presence:{key:myId},broadcast:{self:false}}});
+ queueChannel=channel;
+ let peerId='',confirmed=false,lastProposal=0;
+ view('⚡ SEARCHING FOR A RIVAL',[
+  {label:'MATCHING TWO REAL PLAYERS · UNRANKED',disabled:true},
+  {label:'YOUR MATCH BEGINS WHEN ANOTHER PLAYER JOINS',disabled:true},
+  {label:'✕ CANCEL MATCHMAKING',action:()=>{cancelMatchQueue();duelMenu()}}
+ ]);
+ const sendProposal=()=>{
+  if(!peerId||confirmed||queueChannel!==channel)return;
+  lastProposal=Date.now();
+  channel.send({type:'broadcast',event:'pair-proposal',payload:{from:myId,to:peerId}}).catch(e=>console.warn('Match proposal',e))
+ };
+ channel
+ .on('presence',{event:'sync'},()=>{
+  if(queueChannel!==channel||confirmed)return;
+  const people=Object.values(channel.presenceState()).flat().filter(p=>p?.id);
+  const unique=[...new Set(people.map(p=>p.id))].sort();
+  const index=unique.indexOf(myId);
+  if(index<0)return;
+  peerId=unique[index%2===0?index+1:index-1]||'';
+  if(peerId&&Date.now()-lastProposal>900)sendProposal()
+ })
+ .on('broadcast',{event:'pair-proposal'},async ({payload:p})=>{
+  if(!p||p.to!==myId||confirmed||queueChannel!==channel)return;
+  const present=Object.values(channel.presenceState()).flat().some(v=>v?.id===p.from);
+  if(!present)return;
+  // Reply once before leaving, to ensure both players know the same pairing.
+  if(!peerId)peerId=p.from;
+  if(peerId!==p.from)return;
+  sendProposal();
+  confirmed=true;
+  const code=await pairCode(myId,peerId);
+  const role=myId<peerId?'host':'guest';
+  await cancelMatchQueue();
+  await connectDuel(code,role)
+ })
+ .subscribe(async status=>{
+  if(queueChannel!==channel)return;
+  if(status==='SUBSCRIBED'){
+   try{await channel.track({id:myId})}
+   catch(e){await cancelMatchQueue();notice('COULD NOT JOIN MATCHMAKING QUEUE',duelMenu)}
+  }else if(['CHANNEL_ERROR','TIMED_OUT','CLOSED'].includes(status)){
+   await cancelMatchQueue();notice('MATCHMAKING CONNECTION FAILED',duelMenu)
+  }
+ })
 }
 async function connectDuel(code,role){
  if(!api?.channel){notice('ONLINE REALTIME SERVICE IS UNAVAILABLE',duelMenu);return}
@@ -1252,7 +1315,7 @@ async function connectDuel(code,role){
    }
   });
 }
-document.querySelector('#popupClose').addEventListener('click',()=>{if(duelChannel&&!duelStarted)leaveDuelRoom()});
+document.querySelector('#popupClose').addEventListener('click',()=>{if(queueChannel)cancelMatchQueue();if(duelChannel&&!duelStarted)leaveDuelRoom()});
 window.clashOnlineDuel=duelMenu;
 window.clashOnlineFriends=online;
 })();
