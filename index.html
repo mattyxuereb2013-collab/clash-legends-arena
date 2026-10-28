@@ -183,6 +183,23 @@ body:not(.phone-mode) #touch{display:none!important}
 #popupOptions button.locked-option{background:linear-gradient(160deg,#36416e,#222b51);color:#d8daf4}
 #popupOptions button.selected{background:linear-gradient(160deg,#f8c851,#dd8127);color:#342451;border-color:#fff5a2}
 @media(max-height:510px){#lobbyPopup .popup-card{padding:10px;max-height:91dvh}#popupOptions button{min-height:40px;padding:7px;font-size:12px}#popupTitle{margin:0 0 8px}}
+
+/* Loot reveal and milestone styling, using original Clash Legends art direction */
+#lobbyPopup[data-loot] .popup-card{border-color:#ffe49d;background:radial-gradient(circle at 50% 23%,#f4ce674f,transparent 64%),linear-gradient(145deg,#343884,#1b2054)}
+#lobbyPopup[data-loot] #popupTitle{animation:lootReveal .5s cubic-bezier(.18,1.3,.35,1) both}
+#lobbyPopup[data-loot] #popupOptions button:first-child{grid-column:1/-1;min-height:100px;font-size:clamp(17px,2.7vw,26px);background:radial-gradient(circle,#9a90ff,#4d3c91);border:3px solid #f1ccff;animation:lootReveal .65s cubic-bezier(.18,1.3,.35,1) .1s both}
+#lobbyPopup[data-loot="super rare"] .popup-card{background:radial-gradient(circle at 50% 20%,#74d3ff75,transparent 55%),linear-gradient(135deg,#2556a5,#1a244c)}
+#lobbyPopup[data-loot="epic"] .popup-card{background:radial-gradient(circle at 50% 20%,#cb86ff90,transparent 55%),linear-gradient(135deg,#63329e,#241857)}
+#lobbyPopup[data-loot="legendary"] .popup-card{border-color:#ffe47a;background:radial-gradient(circle at 50% 20%,#ffdc7db3,transparent 62%),linear-gradient(135deg,#a65a2c,#543168)}
+#lobbyPopup[data-loot="legendary"] #popupTitle{color:#fff5c4!important;text-shadow:0 0 18px #ffcd5c,0 3px #965a21}
+@keyframes lootReveal{0%{opacity:0;transform:scale(.62) translateY(28px) rotate(-4deg)}70%{opacity:1;transform:scale(1.07) translateY(-3px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+#popupOptions .road-reward{font-weight:1000;border-left:6px solid #898ce5!important;text-align:left;padding-inline:16px}
+#popupOptions .fighter-unlock{background:linear-gradient(145deg,#7d55ce,#43308c);border-color:#e0b4ff}
+#popupOptions .road-drop{background:linear-gradient(145deg,#624cbe,#342c83)}
+#popupOptions .road-box{background:linear-gradient(145deg,#ad753e,#714791);border-color:#f8d5a0}
+#popupOptions .road-ready{background:linear-gradient(145deg,#ffe890,#f5a339);color:#3a2751;border-color:#fff1b5!important}
+#popupOptions .road-claimed{opacity:.68;border-left-color:#59daa1!important}
+@media(prefers-reduced-motion:reduce){#lobbyPopup[data-loot] #popupTitle,#lobbyPopup[data-loot] #popupOptions button:first-child{animation:none}}
 </style></head><body><canvas id="game"></canvas><div id="threeView"></div><div id="hud"><div id="health">❤️ 100</div><div id="score">⭐ 0 &nbsp; 💀 0</div><div id="wave">WAVE 1</div></div><button id="pauseBtn" type="button" hidden aria-label="Pause match">Ⅱ</button><div id="pauseOverlay" hidden><div class="pause-card"><h2>⏸ MATCH PAUSED</h2><p>Ready to jump back into the arena?</p><button type="button" id="resumeBtn">▶ RESUME MATCH</button><button type="button" id="surrenderBtn">🚪 LEAVE MATCH (LOSE TROPHIES)</button></div></div><div id="rotateNotice">📱<strong>ROTATE YOUR PHONE</strong><span>Clash Legends plays best in landscape.</span></div><div id="matchIntro" aria-live="polite"><h2 id="introTitle">10 LEGENDS ENTER</h2><div id="roster"></div><p id="introSub">SOLO SHOWDOWN</p></div><div id="touch"><div id="stick"><div id="knob"></div></div><div id="super">⚡</div><div id="fire">🎯</div></div><div id="status">WASD move · Mouse aim · Click shoot · Space Super</div><div id="menu"><div id="panel">
 <div class="lobby-top"><div class="profile"><span class="avatar">⚡</span><div><b>CLASH LEGENDS</b><div style="font-size:12px;color:#b6baff" id="profileNickname">ROOKIE LEGEND</div><button type="button" id="profileSignout">SWITCH PROFILE</button></div></div><div class="currencies"><span class="currency" id="lobbyTrophies">🏆 0</span><span class="currency" id="lobbyCoins">🪙 0</span><span class="currency">💎 0</span></div></div>
 <div class="lobby-main"><div class="lobby-rail"><button id="fightersBtn">🦸<div>FIGHTERS</div></button><button id="shopBtn">🛒<div>SHOP</div></button><button id="questsBtn">📜<div>QUESTS</div></button></div>
@@ -244,7 +261,8 @@ function openRandomReward(kind,returnTo){
   {label:'🎉 '+(item==='coins'?rewardText({type:item,amount}):icons[fighter]+' '+names[fighter]+' · '+amount+' POWER POINTS'),disabled:true},
   {label:'OPEN ANOTHER '+(kind==='box'?'BOX':'DROP'),disabled:(kind==='box'?boxes():drops())===0,action:()=>openRandomReward(kind,returnTo)},
   {label:'✅ COLLECT',action:returnTo}
- ])
+ ]);
+ popup.dataset.loot=tier.toLowerCase();
 }
 function rewardsMenu(){
  screen('🎁 REWARDS & COLLECTION',[
@@ -258,7 +276,7 @@ function rewardsMenu(){
 // Online rooms are ephemeral: never leave a stale duel selected after a reload.
 if(localStorage.getItem('clashGameMode')==='duel'&&!window.clashLiveDuel?.active)localStorage.setItem('clashGameMode','showdown');
 const close=()=>popup.style.display='none';
-function screen(title,items){heading.textContent=title;options.replaceChildren();items.forEach(({label,action,selected:active,disabled})=>{
+function screen(title,items){popup.removeAttribute('data-loot');heading.textContent=title;options.replaceChildren();items.forEach(({label,action,selected:active,disabled})=>{
  const b=document.createElement('button');b.type='button';b.textContent=label;b.disabled=!!disabled;
  if(active)b.classList.add('selected');
  if(/CLASH DROP|ARENA BOX|REWARD|TROPHY ROAD|HYPERCHARGE/i.test(label))b.classList.add('reward-option');
@@ -1164,7 +1182,7 @@ function roadPopup(){
   const item=road[j],claimed=j<idx,ready=j===idx&&total>=item.t;
   const b=document.createElement('button');b.type='button';
   b.textContent=(claimed?'✓ ':ready?'🎁 ':'🔒 ')+item.t+' 🏆 · '+labelFor(item)+(ready?' · CLAIM':'');
-  b.disabled=!ready;
+  b.disabled=!ready;b.classList.add('road-reward');b.classList.add(item.type==='fighter'?'fighter-unlock':'road-'+item.type);if(ready)b.classList.add('road-ready');if(claimed)b.classList.add('road-claimed');
   if(ready)b.onclick=()=>{
    if(claimIndex()!==j||num('clashLegendsTrophies')<item.t)return;
    // Advance the claim marker before paying, preventing repeated taps from duplicating rewards.
