@@ -327,9 +327,17 @@ function spawnBot(){
 }
 function hitWall(o){return walls.some(q=>o.x+o.r>q.x&&o.x-o.r<q.x+q.w&&o.y+o.r>q.y&&o.y-o.r<q.y+q.h)}
 function blocked(o){return hitWall(o)||crates.some(q=>q.hp>0&&Math.hypot(o.x-q.x,o.y-q.y)<o.r+q.r+2)}
-function inBush(o){return bushes.some(b=>o.x>b.x&&o.x<b.x+b.w&&o.y>b.y&&o.y<b.y+b.h)}
+function bushAt(o){return bushes.find(b=>o.x>b.x&&o.x<b.x+b.w&&o.y>b.y&&o.y<b.y+b.h)||null}
+function inBush(o){return !!bushAt(o)}
+function concealedFrom(observer,target){
+ const cover=bushAt(target);
+ if(!cover)return false;
+ if(dist(observer,target)<=140)return false;
+ if(bushAt(observer)===cover)return false;
+ return performance.now()-(target.lastShot||0)>1300
+}
 function move(o,dx,dy){let ox=o.x;o.x=clamp(o.x+dx,o.r,worldW-o.r);if(blocked(o))o.x=ox;let oy=o.y;o.y=clamp(o.y+dy,o.r,worldH-o.r);if(blocked(o))o.y=oy}
-function shoot(o,angle,enemy=false,power=1){let k=enemy?(o.style||0)%8:selectedFighter,level=1+hero.cubes*.14,patterns=enemy?[[0]]:[[0],[-.18,0,.18],[-.08,.08],[-.28,-.14,0,.14,.28],[0],[-.12,0,.12],[-.22,0,.22],[-.07,.07]],offsets=patterns[k]||[0];if(!enemy)o.lastShot=performance.now();for(let offset of offsets){let a=angle+offset,speed=enemy?330:[620,480,700,390,530,740,420,590][k],damage=enemy?10:[27,12,22,9,30,17,14,25][k]*(1+4*(fighterLevel()-1)/25)*level*power;shots.push({x:o.x+Math.cos(a)*28,y:o.y+Math.sin(a)*28,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:enemy?7:[8,7,10,6,12,6,8,11][k],damage,life:enemy?1.8:[1.25,.7,1.65,.85,1.35,1.8,.95,1.4][k],enemy,owner:enemy?o:null,team:enemy?(o.team===undefined?-1:o.team):0,kind:enemy?-1:k,bounces:enemy?0:k===5?2:0,trail:[],color:enemy?(o.team===0?'#73e9ff':'#ff697f'):["#38b6ff","#ff9852","#8fe36a","#dc88fa","#7ce8ff","#ffd064","#ff7ab5","#c49a70"][k]})}}
+function shoot(o,angle,enemy=false,power=1){let k=enemy?(o.style||0)%8:selectedFighter,level=1+hero.cubes*.14,patterns=enemy?[[0]]:[[0],[-.18,0,.18],[-.08,.08],[-.28,-.14,0,.14,.28],[0],[-.12,0,.12],[-.22,0,.22],[-.07,.07]],offsets=patterns[k]||[0];o.lastShot=performance.now();for(let offset of offsets){let a=angle+offset,speed=enemy?330:[620,480,700,390,530,740,420,590][k],damage=enemy?10:[27,12,22,9,30,17,14,25][k]*(1+4*(fighterLevel()-1)/25)*level*power;shots.push({x:o.x+Math.cos(a)*28,y:o.y+Math.sin(a)*28,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,r:enemy?7:[8,7,10,6,12,6,8,11][k],damage,life:enemy?1.8:[1.25,.7,1.65,.85,1.35,1.8,.95,1.4][k],enemy,owner:enemy?o:null,team:enemy?(o.team===undefined?-1:o.team):0,kind:enemy?-1:k,bounces:enemy?0:k===5?2:0,trail:[],color:enemy?(o.team===0?'#73e9ff':'#ff697f'):["#38b6ff","#ff9852","#8fe36a","#dc88fa","#7ce8ff","#ffd064","#ff7ab5","#c49a70"][k]})}}
 function burst(px,py,color,n=12){for(let i=0;i<n;i++){let a=rand(0,Math.PI*2),v=rand(30,180);particles.push({x:px,y:py,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:rand(.2,.6),color})}}
 function aim(){if(touchFire){return Math.atan2(touchAim.y,touchAim.x)}if(gfx3&&gfx3.ready&&gfx3.camera&&mouse.x>0){const T=gfx3.T;gfx3.ray.setFromCamera(new T.Vector2(mouse.x/Math.max(1,innerWidth)*2-1,1-mouse.y/Math.max(1,innerHeight)*2),gfx3.camera);if(gfx3.ray.ray.intersectPlane(gfx3.aimPlane,gfx3.mouseHit))return Math.atan2(gfx3.mouseHit.z-hero.y,gfx3.mouseHit.x-hero.x)}let sx=mouse.x*devicePixelRatio/scale+cameraX,sy=mouse.y*devicePixelRatio/scale+cameraY;return Math.atan2(sy-hero.y,sx-hero.x)}
 function superAttack(){
@@ -352,9 +360,9 @@ let mag=Math.hypot(dx,dy);if(mag>1){dx/=mag;dy/=mag}hero.vx=dx;hero.vy=dy;move(h
 /* Holding attack aims only; releasing fires once. */
 for(const b of bots){
 if(b.hp<=0)continue;
-const hidden=inBush(hero)&&dist(b,hero)>135&&(performance.now()-(hero.lastShot||0)>1200);
-const candidates=[...(!hidden&&b.team!==0?[hero]:[]),...bots.filter(other=>other!==b&&other.hp>0&&(b.team===undefined||other.team!==b.team))];
-if(!candidates.length){if(b.friendly){move(b,(hero.x-b.x)*dt*.6,(hero.y-b.y)*dt*.6);continue}candidates.push(hero)}
+const hidden=concealedFrom(b,hero);
+const candidates=[...(!hidden&&b.team!==0?[hero]:[]),...bots.filter(other=>other!==b&&other.hp>0&&(b.team===undefined||other.team!==b.team)&&!concealedFrom(b,other))];
+if(!candidates.length){if(b.friendly)move(b,(hero.x-b.x)*dt*.6,(hero.y-b.y)*dt*.6);else if(b.team!==0){const a=rand(-Math.PI,Math.PI);move(b,Math.cos(a)*b.speed*.2*dt,Math.sin(a)*b.speed*.2*dt)}continue}
 let target=candidates.reduce((best,v)=>dist(b,v)<dist(b,best)?v:best,candidates[0]);
 const d=dist(b,target),a=Math.atan2(target.y-b.y,target.x-b.x);if(b.frozen>0){b.frozen=Math.max(0,b.frozen-dt);continue}if(!b.brain){b.brain=rand(.4,1.6);b.dodge=0}b.brain-=dt;if(b.brain<=0){b.side=Math.random()<.5?-1:1;b.brain=rand(.6,1.7)}const danger=shots.find(p=>p.owner!==b&&p.life>0&&dist(p,b)<125&&((p.x-b.x)*p.vx+(p.y-b.y)*p.vy)<0);if(danger)b.dodge=.28;b.dodge=Math.max(0,b.dodge-dt);
 if(b.dodge>0){move(b,-Math.sin(a)*b.side*b.speed*1.8*dt,Math.cos(a)*b.side*b.speed*1.8*dt)}else if(d>190)move(b,Math.cos(a)*b.speed*dt,Math.sin(a)*b.speed*dt);
@@ -578,7 +586,7 @@ function createFighter3(style,me){
 }
 function updateFighter3(o,style,me){
  let g=gfx3,m=g.units.get(o);if(!m){m=createFighter3(style,me||!!o.friendly);g.units.set(o,m)}
- m.root.visible=o.hp>0;m.root.position.set(o.x,0,o.y);
+ m.root.visible=o.hp>0&&(me||o.friendly||!concealedFrom(hero,o));m.root.position.set(o.x,0,o.y);
  const t=performance.now()*.001,walk=Math.hypot(o.vx||0,o.vy||0);
  m.body.position.y=Math.sin(t*4+o.x*.015)*(walk>.3?3:1.1);
  m.body.rotation.z=walk>.3?Math.sin(t*9+o.y*.02)*.05:Math.sin(t*2)*.018;
@@ -597,7 +605,7 @@ function render3(){
  // Reuse meshes on every frame; creating geometry per frame previously leaked GPU memory.
  const alive=new Set([hero,...bots]);
  for(const m of g.unitViews)m.visible=false;
- for(const b of bots){updateFighter3(b,b.style||0,false).root.visible=b.hp>0}
+ for(const b of bots){const v=updateFighter3(b,b.style||0,false);v.root.visible=b.hp>0&&(b.friendly||!concealedFrom(hero,b))}
  updateFighter3(hero,selectedFighter,true).root.visible=hero.hp>0;
  for(const q of crates)if(q.mesh3)q.mesh3.visible=q.hp>0;
  for(let i=0;i<shots.length;i++){
@@ -689,7 +697,7 @@ roundRect(o.x-bw/2, o.y+by,bw,7,3,'#29243e');roundRect(o.x-bw/2,o.y+by,bw*Math.m
 x.fillStyle=player?'#fff':'#ffe9f0';x.font='900 11px system-ui';x.textAlign='center';x.shadowColor='#171333';x.shadowBlur=4;x.fillText(player?['BOLT','EMBER','MOSS','VIOLET','FROST','RICOCHET','NOVA','TERRA'][selectedFighter]:(o.name||'RIVAL'),o.x,o.y+(player?-60:-55));x.shadowBlur=0
 }
 if(hero&&playing){let a=aim(),range=310;x.save();x.globalAlpha=.28;x.fillStyle='#d7f7ff';x.beginPath();x.moveTo(hero.x,hero.y);x.arc(hero.x,hero.y,range,a-.095,a+.095);x.closePath();x.fill();x.strokeStyle='#f6ffff';x.lineWidth=2;x.beginPath();x.arc(hero.x,hero.y,range,a-.095,a+.095);x.stroke();x.restore();for(let i=0;i<3;i++){roundRect(hero.x-21+i*15,hero.y+34,12,5,2,i<ammo?'#ffd455':'#544c66')}}
-for(let b of bots){drawFighter(b,b.style||0,Math.atan2(hero.y-b.y,hero.x-b.x))}
+for(let b of bots){if(b.friendly||!concealedFrom(hero,b))drawFighter(b,b.style||0,Math.atan2(hero.y-b.y,hero.x-b.x))}
 if(hero){drawFighter(hero,selectedFighter,aim(),true)}
 for(let p of particles){x.globalAlpha=Math.min(1,p.life*3);x.fillStyle=p.color;x.save();x.translate(p.x,p.y);x.rotate((p.x+p.y)*.03);x.fillRect(-3,-3,6,6);x.restore()}x.globalAlpha=1;x.restore();if(hitFlash>0){x.fillStyle='rgba(255,42,80,'+(hitFlash*.2)+')';x.fillRect(0,0,w,h)}}
 function drawIntro(){if(!introStage)return;let cw=w/devicePixelRatio,ch=h/devicePixelRatio;x.save();x.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);x.fillStyle=introStage===2?'#101b38f2':introStage===1?'#10142cf0':'#10142cc8';x.fillRect(0,0,cw,ch);x.textAlign='center';x.textBaseline='middle';x.shadowColor='#080b1e';x.shadowBlur=12;
