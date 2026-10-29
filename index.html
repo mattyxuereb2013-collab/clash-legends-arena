@@ -843,9 +843,18 @@ function createFighter3(style,me){
  const shadow=new T.Mesh(new T.CircleGeometry(34,26),new T.MeshBasicMaterial({color:me?0x192e7b:0x321d31,transparent:true,opacity:.31,depthWrite:false}));
  shadow.rotation.x=-Math.PI/2;shadow.position.y=2;root.add(shadow);
  const ring=new T.Mesh(new T.TorusGeometry(31,3.5,8,32),new T.MeshBasicMaterial({color:me?0xffdf54:0xef536e}));
+ const outlineRing=new T.Mesh(new T.RingGeometry(32,38,40),new T.MeshBasicMaterial({color:me?0x84e5ff:0xe5657f,transparent:true,opacity:.35,side:T.DoubleSide,depthWrite:false}));
+ outlineRing.rotation.x=-Math.PI/2;outlineRing.position.y=2.5;root.add(outlineRing);
  ring.rotation.x=-Math.PI/2;ring.position.y=3;root.add(ring);
  const legL=mesh3(body,g.sphere,g.mat(dark),-12,17,2,11,13,12),legR=mesh3(body,g.sphere,g.mat(dark),12,17,2,11,13,12);
  mesh3(body,g.sphere,g.mat(main),0,43,1,23,24,19);
+ // Bold breastplate contour and a glossy emblem make outfits legible at battle scale.
+ mesh3(body,g.sphere,g.mat(dark),0,46,19,18,17,5);
+ const breast=mesh3(body,g.round,g.mat(trim),0,48,24,10,12,4);
+ breast.rotation.z=(style%2?.12:-.12);
+ for(const side of [-1,1]){
+  mesh3(body,g.sphere,g.mat(trim),side*13,62,8,5,5,4);
+ }
  mesh3(body,g.bx,g.mat(trim),0,38,19,30,8,6);
  mesh3(body,g.sphere,g.mat(dark),-20,45,0,9,13,12);
  mesh3(body,g.sphere,g.mat(dark),20,45,0,9,13,12);
@@ -857,6 +866,10 @@ function createFighter3(style,me){
  mesh3(armRight,g.sphere,g.mat(main),7,-13,3,11,16,12);
  mesh3(armRight,g.sphere,g.mat(skin),9,-26,9,10,11,10);
  mesh3(body,g.sphere,g.mat(skin),0,80,2,23,23,20);
+ // Strong, readable face accents and a tiny nose for a more expressive silhouette.
+ mesh3(body,g.sphere,g.mat(0xe99a79),0,77,23,5,4,4);
+ mesh3(body,g.sphere,g.mat(0xffe2c1),-14,75,19,5,3,3);
+ mesh3(body,g.sphere,g.mat(0xffe2c1),14,75,19,5,3,3);
  // Readable animated eyes remain visible from the elevated gameplay camera.
  for(const xx of [-9,9]){
   mesh3(body,g.sphere,g.mat(0xffffff),xx,81,19,6,8,3);
@@ -926,7 +939,7 @@ function createFighter3(style,me){
  }
  const hpBg=mesh3(root,g.bx,g.mat(0x281e40),0,117,0,62,6,7);
  const hpFill=mesh3(root,g.bx,g.mat(me?0x56efa3:0xff6175),0,117,1,60,4,7);
- return{root,body,gun,legL,legR,armLeft,armRight,hpFill,ring,style,me,shoulderPad,shoulderPadR,backpack};
+ return{root,body,gun,legL,legR,armLeft,armRight,hpFill,ring,outlineRing,style,me,shoulderPad,shoulderPadR,backpack};
 }
 function updateFighter3(o,style,me){
  let g=gfx3,m=g.units.get(o);if(!m){m=createFighter3(style,me||!!o.friendly);g.units.set(o,m)}
@@ -954,6 +967,8 @@ function updateFighter3(o,style,me){
  m.armRight.rotation.z=-shotPulse*.18;
  m.shoulderPad.rotation.z=Math.sin(t*8)*walk*.07;m.shoulderPadR.rotation.z=-Math.sin(t*8)*walk*.07;
  const powered=me&&hero.super>=100;
+ m.ring.material.opacity=1;
+ m.outlineRing.material.opacity=me?.35+Math.sin(t*4)*.07:.22;
  m.ring.material.color.setHex(me&&hero.hyper>0?0xff77ee:powered?0xffee6e:me?0xffd76a:o.friendly?0x6cffee:0xff5778);
  m.ring.scale.setScalar(me&&hero.hyper>0?1.24+Math.sin(t*12)*.11:powered?1.1+Math.sin(t*7)*.08:1);
  const facing=me?aim():o.remote?(o.facing||0):Math.atan2(hero.y-o.y,hero.x-o.x);
