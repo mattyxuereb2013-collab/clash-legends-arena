@@ -1,0 +1,47 @@
+const {chromium}=require('playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch({channel:'chrome',headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
+ try{
+  const page=await browser.newPage({viewport:{width:1280,height:720}}),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  await page.goto('http://127.0.0.1:8765/void-bloom.html',{waitUntil:'load',timeout:45000});
+  assert.match(await page.title(),/VOID.*BLOOM/);
+  await page.locator('#start').click();
+  await page.waitForFunction(()=>window.__voidBloomTest?.snapshot().state==='play');
+  assert.equal(await page.locator('#hud').evaluate(el=>el.classList.contains('active')),true);
+  await page.keyboard.down('d');await page.waitForTimeout(1400);await page.keyboard.up('d');
+  assert((await page.evaluate(()=>window.__voidBloomTest.snapshot().enemies))>0,'waves must spawn enemies');
+  await page.screenshot({path:'void-bloom-desktop.png'});
+  await page.evaluate(()=>window.__voidBloomTest.addXP(9));
+  await page.waitForFunction(()=>window.__voidBloomTest.snapshot().state==='choose');
+  assert.equal(await page.locator('#cards button').count(),3,'each evolution offers 3 upgrades');
+  await page.locator('#cards button').first().click();
+  assert.equal(await page.evaluate(()=>window.__voidBloomTest.snapshot().state),'play');
+  const upgrades=await page.evaluate(()=>window.__voidBloomTest.snapshot().upgrades);
+  assert.equal(Object.values(upgrades).reduce((a,b)=>a+b,0),1,'upgrade must apply');
+  await page.keyboard.press('p');
+  assert.equal(await page.evaluate(()=>window.__voidBloomTest.snapshot().state),'pause');
+  await page.locator('#resume').click();
+  assert.equal(await page.evaluate(()=>window.__voidBloomTest.snapshot().state),'play');
+  await page.evaluate(()=>window.__voidBloomTest.damage(9999));
+  await page.waitForFunction(()=>window.__voidBloomTest.snapshot().state==='end');
+  assert.match(await page.locator('#results').innerText(),/SURVIVED/);
+  await page.locator('#retry').click();
+  assert.equal(await page.evaluate(()=>window.__voidBloomTest.snapshot().level),1,'retry must reset upgrades');
+  assert.deepEqual(errors,[],'desktop game must not throw');
+  const mobile=await browser.newContext({viewport:{width:844,height:390},isMobile:true,hasTouch:true});
+  const mp=await mobile.newPage(),merrors=[];
+  mp.on('pageerror',e=>merrors.push(e.message));
+  await mp.goto('http://127.0.0.1:8765/void-bloom.html',{waitUntil:'load',timeout:45000});
+  await mp.locator('#start').click();
+  assert.equal(await mp.locator('#mobile').evaluate(el=>el.classList.contains('on')),true);
+  assert(await mp.locator('#joystick').isVisible());
+  await mp.locator('#mobileDash').tap();
+  assert.equal(await mp.evaluate(()=>window.__voidBloomTest.snapshot().state),'play');
+  await mp.screenshot({path:'void-bloom-mobile.png'});
+  assert.deepEqual(merrors,[],'mobile game must not throw');
+  await mobile.close();
+  console.log('PASS VOID BLOOM desktop and mobile, waves, upgrades, pause, death and restart');
+ }finally{await browser.close()}
+})().catch(e=>{console.error('FAIL VOID BLOOM:',e);process.exitCode=1});
