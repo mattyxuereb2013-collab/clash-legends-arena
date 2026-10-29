@@ -20,7 +20,7 @@ const canvas=document.getElementById('game'),ctx=canvas.getContext('2d',{alpha:f
 const el=id=>document.getElementById(id);
 let W=0,H=0,dpr=1,world={w:2700,h:1900},camera={x:0,y:0},stars=[],decor=[];
 const rand=(a,b)=>a+Math.random()*(b-a),clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
-const TAU=Math.PI*2,keys=new Set();let state='menu',last=0,t=0,elapsed=0,spawn=0,wave=1,kills=0,score=0,flash=0,shake=0,player,foes=[],bullets=[],orbs=[],fx=[],texts=[],nextId=1,pendingChoices=0,hitStop=0;
+const TAU=Math.PI*2,keys=new Set();let state='menu',last=0,t=0,elapsed=0,spawn=0,wave=1,kills=0,score=0,flash=0,shake=0,player,foes=[],bullets=[],orbs=[],fx=[],texts=[],nextId=1,pendingChoices=0,hitStop=0,lastBossWave=0;
 const upgrades=[
  {id:'rate',symbol:'⚡',name:'OVERCLOCK',desc:'Fire 22% faster with every stack.',max:8},
  {id:'damage',symbol:'✦',name:'STARFIRE',desc:'Projectiles deal 32% more damage.',max:8},
@@ -40,7 +40,7 @@ function best(){try{return Number(localStorage.getItem('voidBloomBest')||0)||0}c
 function saveBest(seconds){if(seconds>best())try{localStorage.setItem('voidBloomBest',String(Math.floor(seconds)))}catch(e){}}
 function clock(s){let n=Math.floor(s);return String(Math.floor(n/60)).padStart(2,'0')+':'+String(n%60).padStart(2,'0')}
 function reset(){
- t=0;elapsed=0;spawn=0;wave=1;kills=0;score=0;flash=0;shake=0;pendingChoices=0;hitStop=0;
+ t=0;elapsed=0;spawn=0;wave=1;kills=0;score=0;flash=0;shake=0;pendingChoices=0;hitStop=0;lastBossWave=0;
  foes=[];bullets=[];orbs=[];fx=[];texts=[];nextId=1;
  player={x:world.w/2,y:world.h/2,vx:0,vy:0,r:18,hp:100,max:100,speed:295,damage:23,rate:.28,fire:0,pierce:0,spread:1,magnet:105,dash:0,dashCd:0,inv:1.6,level:1,xp:0,next:8,orbit:0,nova:0,pulse:5,stacks:{},angle:0,trail:[]};
  camera.x=player.x-W/2;camera.y=player.y-H/2;
@@ -89,7 +89,7 @@ function update(dt){
  player.trail.push({x:player.x,y:player.y,a:1});if(player.trail.length>17)player.trail.shift();
  player.fire-=dt;if(player.fire<=0){shoot();player.fire=Math.max(.075,player.rate)}
  spawn-=dt;if(spawn<=0&&foes.length<165){spawnEnemy();spawn=Math.max(.14,1.05-wave*.072)*rand(.72,1.35)}
- if(wave%5===0&&Math.floor(elapsed)%120===0&&!foes.some(f=>f.type==='titan')){const f=newEnemy('titan',clamp(player.x+520,100,world.w-100),clamp(player.y-390,100,world.h-100));foes.push(f)}
+ if(wave%5===0&&wave!==lastBossWave){lastBossWave=wave;const f=newEnemy('titan',clamp(player.x+520,100,world.w-100),clamp(player.y-390,100,world.h-100));foes.push(f)}
  for(const f of foes){let x=player.x-f.x,y=player.y-f.y,d=Math.hypot(x,y)||1;f.phase+=dt*2;f.hit=Math.max(0,f.hit-dt);
  const wiggle=f.type==='wisp'?Math.sin(f.phase*4)*.65:0;f.x+=((x/d)*f.speed+(-y/d)*wiggle*f.speed)*dt;f.y+=((y/d)*f.speed+(x/d)*wiggle*f.speed)*dt;
  if(d<f.r+player.r&&player.inv<=0){player.hp-=f.damage;player.inv=.64;shake=14;flash=.45;label(player.x,player.y-25,'-'+f.damage,'#ff85ab');burst(player.x,player.y,'#ff85ab',24);sound(150,.18,'sawtooth',.065,-110);if(player.hp<=0){die();return}}}
