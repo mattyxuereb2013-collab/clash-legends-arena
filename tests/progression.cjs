@@ -37,6 +37,7 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashPassClaimed'))),2);
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashDrops'))),1);
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashLegendsCoins'))),wallet);
+  await page.locator('#popupClose').click();
   await page.evaluate(()=>{localStorage.setItem('clashPassXP','10260');localStorage.setItem('clashPassClaimed','29');window.clashLobbyRefresh()});
   await page.locator('#shopBtn').click();
   await page.getByRole('button',{name:/CLASH PASS · FREE/}).click();
