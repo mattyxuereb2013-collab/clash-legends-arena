@@ -166,7 +166,7 @@ body:not(.phone-mode) #touch{display:none!important}
 #fighterArt.webgl-loaded #lobbyFighterCanvas{visibility:hidden}
 
 /* Clash Legends loot/progression UI: dramatic arcade panels, not plain menu rows */
-#lobbyPopup .popup-card{max-width:min(720px,94vw);background:
+#lobbyPopup .popup-card{max-height:calc(100dvh - 48px);overscroll-behavior:contain;max-width:min(720px,94vw);background:
  radial-gradient(circle at 52% -10%,#8a79f47a,transparent 53%),
  linear-gradient(148deg,#343591,#1b255a 76%);border:3px solid #9eb6ff;
  box-shadow:0 9px 0 #101842,0 19px 43px #050624ab;position:relative;overflow:auto}
