@@ -748,14 +748,27 @@ function build3(){
  for(const v of g.trailViews)g.moving.remove(v);g.trailViews.length=0;
  for(const v of g.dropViews)g.moving.remove(v);g.dropViews.length=0;
  for(const v of g.particleViews)g.moving.remove(v);g.particleViews.length=0;
- // Layered, bevel-like masonry with capstones, brick seams, and warm rim highlights.
+ // Every arena has its own wall palette and landmark silhouette.
+ const masonry=[
+  [0x6a4639,0x9f563d,0xc48250,0xdea46b,0x965c41],
+  [0x294a66,0x477da1,0x6caaca,0xa4e5e7,0x47768e],
+  [0x4e446e,0x80648e,0xb296ab,0xe4c7a0,0x665372]
+ ][arenaTheme];
  for(const q of walls){
-  box3(g.fixed,q.x+4,q.y+8,q.w,q.h,65,0x6a4639);
-  box3(g.fixed,q.x,q.y,q.w,q.h,68,0x9f563d);
-  box3(g.fixed,q.x+3,q.y+3,q.w-6,q.h-6,12,0xc48250).position.y=65;
-  const cap=box3(g.fixed,q.x-4,q.y-4,q.w+8,q.h+8,10,0xdea46b);cap.position.y=74;
-  for(let i=1;i<Math.floor(q.w/38);i++){const seam=box3(g.fixed,q.x+i*38,q.y-1,3,q.h+2,2,0x965c41);seam.position.y=81}
-  const line=box3(g.fixed,q.x-1,q.y+q.h/2,q.w+2,2,2,0xa76e49);line.position.y=81;
+  box3(g.fixed,q.x+4,q.y+8,q.w,q.h,65,masonry[0]);
+  box3(g.fixed,q.x,q.y,q.w,q.h,68,masonry[1]);
+  box3(g.fixed,q.x+3,q.y+3,q.w-6,q.h-6,12,masonry[2]).position.y=65;
+  const cap=box3(g.fixed,q.x-4,q.y-4,q.w+8,q.h+8,10,masonry[3]);cap.position.y=74;
+  for(let i=1;i<Math.floor(q.w/38);i++){
+   const seam=box3(g.fixed,q.x+i*38,q.y-1,3,q.h+2,2,masonry[4]);seam.position.y=81
+  }
+  const line=box3(g.fixed,q.x-1,q.y+q.h/2,q.w+2,2,2,masonry[4]);line.position.y=81;
+  if(arenaTheme===1){
+   const ornament=mesh3(g.fixed,g.round,g.mat(0x9ff4e5,0x166c69),q.x+q.w/2,89,q.y+q.h/2,9,15,9);
+   ornament.castShadow=false
+  }else if(arenaTheme===2){
+   mesh3(g.fixed,g.round,g.mat(0xf5d49e),q.x+q.w/2,91,q.y+q.h/2,12,6,10);
+  }
  }
  // Dense dark foliage under bright tufted crowns; no hundreds of per-frame allocations.
  const bushColors=[0x1d5a32,0x2a7139,0x378c44,0x45a252,0x5cae5c];
