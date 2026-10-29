@@ -33,6 +33,21 @@ const assert=require('node:assert/strict');
   assert(guestHP>0&&guestHP<100,'received online projectile should damage guest locally');
   assert((await guest.evaluate(()=>window.__clashTest.snapshot().damageNumbers))>0,'incoming online hit should produce a visible damage indicator');
   console.log('PASS: live attack broadcast caused damage on remote client (guest HP '+guestHP+')');
+  const netGuard=await guest.evaluate(()=>{
+    const before=window.__clashTest.snapshot().remote;
+    window.clashGameReceiveFrame({x:2200,y:1500,hp:before.hp,angle:0});
+    const after=window.__clashTest.snapshot().remote;
+    return {jump:Math.hypot(after.x-before.x,after.y-before.y),after}
+  });
+  assert(netGuard.jump<=241,'remote state packets must not teleport an opponent across the arena');
+  const flood=await guest.evaluate(()=>{
+    const before=window.__clashTest.snapshot().shots;
+    window.clashGameReceiveShot({angle:0});
+    window.clashGameReceiveShot({angle:0});
+    return window.__clashTest.snapshot().shots-before;
+  });
+  assert(flood<=3,'remote fire packets must be rate-limited to one attack burst');
+  console.log('PASS: online movement and firing packet sanity limits');
   assert.equal(await guest.evaluate(()=>localStorage.getItem('clashGameMode')),'duel');
   await host.evaluate(()=>window.__clashTest.forceWin());
   await host.waitForSelector('.result-card',{timeout:12000});
