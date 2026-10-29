@@ -930,12 +930,20 @@ function createFighter3(style,me){
 }
 function updateFighter3(o,style,me){
  let g=gfx3,m=g.units.get(o);if(!m){m=createFighter3(style,me||!!o.friendly);g.units.set(o,m)}
- m.root.visible=o.hp>0&&(me||o.friendly||!concealedFrom(hero,o));m.root.position.set(o.x,0,o.y);
+ m.root.visible=o.hp>0&&(me||o.friendly||!concealedFrom(hero,o));
+ // Interpolate networked opponents visually, without modifying collision coordinates.
+ if(o.remote&&m.networkReady){
+  const d=Math.hypot(o.x-m.root.position.x,o.y-m.root.position.z);
+  if(d>230)m.root.position.set(o.x,0,o.y);
+  else{m.root.position.x+=(o.x-m.root.position.x)*.24;m.root.position.z+=(o.y-m.root.position.z)*.24}
+ }else m.root.position.set(o.x,0,o.y);
+ m.networkReady=true;
  const t=performance.now()*.001,walk=Math.hypot(o.vx||0,o.vy||0);
  const stride=Math.sin(t*11+o.x*.006),moveWeight=walk>.28?1:0;
  m.body.position.y=(moveWeight?Math.abs(stride)*3.3:Math.sin(t*2.3)*1.4);
  m.body.scale.y=1+(moveWeight?Math.abs(stride)*.018:Math.sin(t*2.3)*.013);
- m.body.rotation.z=walk>.3?Math.sin(t*9+o.y*.02)*.05:Math.sin(t*2)*.018;
+ m.body.rotation.z=walk>.3?Math.sin(t*9+o.y*.02)*.065:Math.sin(t*2)*.018;
+ m.body.rotation.x=walk>.3?-.055:Math.sin(t*2.2)*.012;
  m.body.visible=!(me&&o.inv>0&&Math.floor(performance.now()/95)%2===0);
  m.legL.position.y=17+stride*moveWeight*5;m.legR.position.y=17-stride*moveWeight*5;
  m.legL.position.z=2+Math.cos(t*11+o.x*.006)*moveWeight*5;
@@ -1133,15 +1141,32 @@ if((location.hostname==='127.0.0.1'||location.hostname==='localhost')&&new URLSe
  if(!playing||!window.clashLiveDuel?.active||!data)return;
  const enemy=bots.find(b=>b.remote);if(!enemy)return;
  const finite=(n,min,max,fallback)=>Number.isFinite(n)?Math.max(min,Math.min(max,n)):fallback;
- enemy.x=finite(data.x,enemy.r,worldW-enemy.r,enemy.x);
- enemy.y=finite(data.y,enemy.r,worldH-enemy.r,enemy.y);
+ // Reject implausible teleports; the unranked client still needs a proper
+ // authoritative match server before online trophies can be enabled.
+ const now=performance.now(),elapsed=enemy.netUpdate?Math.max(.04,Math.min(1,(now-enemy.netUpdate)/1000)):.5;
+ const targetX=finite(data.x,enemy.r,worldW-enemy.r,enemy.x);
+ const targetY=finite(data.y,enemy.r,worldH-enemy.r,enemy.y);
+ const distance=Math.hypot(targetX-enemy.x,targetY-enemy.y);
+ const maxStep=420*elapsed+30;
+ if(distance>0){
+  const ratio=Math.min(1,maxStep/distance);
+  enemy.x+= (targetX-enemy.x)*ratio;
+  enemy.y+= (targetY-enemy.y)*ratio;
+ }
+ enemy.netUpdate=now;
  enemy.hp=finite(data.hp,0,enemy.max,enemy.hp);
  enemy.facing=finite(data.angle,-Math.PI*3,Math.PI*3,0)
 };
 window.clashGameReceiveShot=data=>{
  if(!playing||introStage||!window.clashLiveDuel?.active||!Number.isFinite(data?.angle))return;
  const enemy=bots.find(b=>b.remote);
- if(enemy&&enemy.hp>0)shoot(enemy,Math.max(-Math.PI*2,Math.min(Math.PI*2,data.angle)),true)
+ if(enemy&&enemy.hp>0){
+  const now=performance.now();
+  // Prevent packet floods from spawning unlimited remote projectiles.
+  if(now-(enemy.lastRemoteFire||0)<170)return;
+  enemy.lastRemoteFire=now;
+  shoot(enemy,Math.max(-Math.PI*2,Math.min(Math.PI*2,data.angle)),true)
+ }
 };
 window.clashGameDuelDisconnected=()=>{
  if(!playing)return;
