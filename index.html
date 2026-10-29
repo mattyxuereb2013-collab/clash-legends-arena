@@ -271,7 +271,16 @@ const passTiers=[
  {xp:420,type:'coins',amount:180},{xp:560,type:'drop',amount:2},
  {xp:710,type:'points',amount:110},{xp:880,type:'box',amount:2},
  {xp:1060,type:'coins',amount:350},{xp:1260,type:'drop',amount:3},
- {xp:1500,type:'points',amount:180},{xp:1800,type:'box',amount:3}
+ {xp:1500,type:'points',amount:180},{xp:1800,type:'box',amount:3},
+ {xp:2100,type:'coins',amount:450},{xp:2420,type:'drop',amount:2},
+ {xp:2760,type:'points',amount:220},{xp:3120,type:'box',amount:1},
+ {xp:3500,type:'coins',amount:550},{xp:3900,type:'drop',amount:3},
+ {xp:4320,type:'points',amount:260},{xp:4760,type:'box',amount:2},
+ {xp:5220,type:'coins',amount:700},{xp:5700,type:'drop',amount:4},
+ {xp:6200,type:'points',amount:330},{xp:6720,type:'box',amount:2},
+ {xp:7260,type:'coins',amount:900},{xp:7820,type:'drop',amount:5},
+ {xp:8400,type:'points',amount:400},{xp:9000,type:'box',amount:3},
+ {xp:9620,type:'coins',amount:1200},{xp:10260,type:'box',amount:5}
 ];
 const passXP=()=>num('clashPassXP');
 const passClaimed=()=>Math.min(passTiers.length,num('clashPassClaimed'));
@@ -282,8 +291,9 @@ function earnPassXP(value){
 function clashPass(){
  const xp=passXP(),idx=passClaimed(),next=passTiers[idx];
  screen('🎟️ CLASH PASS · FREE FOREVER',[
- {label:'⭐ PASS XP '+xp+(next?' / '+next.xp:' · ALL TIERS COMPLETE'),disabled:true},
- {label:'✅ ALL 12 TIERS FREE · NO PREMIUM TRACK',disabled:true},
+ {label:'⭐ PASS XP '+xp+(next?' / '+next.xp+' · '+Math.max(0,next.xp-xp)+' XP TO NEXT REWARD':' · ALL TIERS COMPLETE'),disabled:true},
+ {label:'✅ ALL 30 REWARDS FREE · UNLOCK WITH XP',disabled:true},
+ {label:'🎮 EARN XP FROM MATCHES AND QUESTS · NO PURCHASE REQUIRED',disabled:true},
  ...passTiers.map((tier,i)=>({
   label:(i<idx?'✓ ':i===idx&&xp>=tier.xp?'🎁 ':'🔒 ')+'TIER '+(i+1)+' · '+tier.xp+' XP · '+rewardText(tier)+(i===idx&&xp>=tier.xp?' · CLAIM':''),
   disabled:i!==idx||xp<tier.xp,selected:i===idx&&xp>=tier.xp,action:()=>{
