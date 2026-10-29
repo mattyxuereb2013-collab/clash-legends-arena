@@ -26,7 +26,10 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   await page.locator('#shopBtn').click();
   await page.getByRole('button',{name:/CLASH PASS · FREE/}).click();
   assert.match(await page.locator('#popupTitle').innerText(),/FREE FOREVER/);
-  assert.match(await page.locator('#popupOptions').innerText(),/NO PREMIUM TRACK/);
+  assert.match(await page.locator('#popupOptions').innerText(),/ALL 30 REWARDS FREE/);
+  assert.equal(await page.locator('#popupOptions button').filter({hasText:/TIER \d+ ·/}).count(),30,'the pass must show exactly thirty free rewards');
+  assert.equal(await page.getByRole('button',{name:/TIER 30/}).isDisabled(),true,'the final reward must require enough XP');
+  assert.match(await page.locator('#popupOptions').innerText(),/EARN XP FROM MATCHES AND QUESTS/);
   await page.getByRole('button',{name:/TIER 1.*CLAIM/}).click();
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashPassClaimed'))),1);
   const wallet=await page.evaluate(()=>Number(localStorage.getItem('clashLegendsCoins')));
@@ -34,8 +37,15 @@ const {chromium}=require('playwright');const assert=require('node:assert/strict'
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashPassClaimed'))),2);
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashDrops'))),1);
   assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashLegendsCoins'))),wallet);
+  await page.evaluate(()=>{localStorage.setItem('clashPassXP','10260');localStorage.setItem('clashPassClaimed','29');window.clashLobbyRefresh()});
+  await page.locator('#shopBtn').click();
+  await page.getByRole('button',{name:/CLASH PASS · FREE/}).click();
+  await page.getByRole('button',{name:/TIER 30.*CLAIM/}).click();
+  assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashPassClaimed'))),30,'the final XP tier should be claimable');
+  assert.equal(await page.evaluate(()=>Number(localStorage.getItem('clashBoxes'))),5,'the final free pass reward is five boxes');
+  assert.equal(await page.getByRole('button',{name:/TIER 30/}).isDisabled(),true,'last tier must not be claimed twice');
   await page.locator('#popupClose').click();
-  await page.evaluate(()=>localStorage.setItem('clashDrops','0'));
+  await page.evaluate(()=>{localStorage.setItem('clashDrops','0');localStorage.setItem('clashBoxes','0')});
   console.log('PASS free Clash Pass, sequential claim-once coin and Drop rewards');
     console.log('PASS starter lock and first Trophy Road fighter unlock');
   await page.evaluate(()=>{localStorage.setItem('clashLegendsTrophies','75');window.clashLobbyRefresh()});
